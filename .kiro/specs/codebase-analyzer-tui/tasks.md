@@ -6,15 +6,15 @@
   - Set up the basic project structure with proper Go module organization
   - _Requirements: 2.1, 2.2, 6.3_
 
-- [ ] 2. Implement configuration system
+- [x] 2. Implement configuration system
   - Create Config struct with fields for AI provider, API keys, worker limits, and output formats
   - Implement configuration loading from JSON files and environment variables
   - Add validation for configuration values with sensible defaults
   - Write unit tests for configuration loading and validation
   - _Requirements: 6.1, 6.2, 6.5_
 
-- [ ] 3. Build parser registry and Go language parser
-  - [ ] 3.1 Create parser registry with thread-safe registration and lookup
+- [-] 3. Build parser registry and Go language parser
+  - [-] 3.1 Create parser registry with thread-safe registration and lookup
     - Implement ParserRegistry struct with map[string]Parser and sync.RWMutex
     - Add RegisterParser and GetParser methods with proper error handling
     - Write unit tests for parser registration and retrieval

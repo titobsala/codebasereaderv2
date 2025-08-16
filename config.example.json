@@ -1,0 +1,16 @@
+{
+  "ai_provider": "anthropic",
+  "api_key": "your-api-key-here",
+  "max_workers": 4,
+  "output_format": "json",
+  "exclude_patterns": [
+    "node_modules",
+    ".git",
+    "vendor",
+    "__pycache__",
+    ".pytest_cache",
+    "*.pyc",
+    "dist",
+    "build"
+  ]
+}
