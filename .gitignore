@@ -30,3 +30,27 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Build output
+bin/
+dist/
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE specific (uncomment if needed)
+# .idea/
+# .vscode/
+
+# Kiro IDE settings (keep specs but ignore settings)
+.kiro/settings/
