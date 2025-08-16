@@ -2,7 +2,9 @@ package engine
 
 import (
 	"fmt"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/tito-sala/codebasereaderv2/internal/parser"
 )
@@ -47,6 +49,135 @@ func (e *Engine) UpdateConfig(config *Config) {
 			e.workerPool = NewWorkerPool(config.MaxWorkers)
 		}
 	}
+}
+
+// AnalyzeDirectory analyzes all supported files in a directory
+func (e *Engine) AnalyzeDirectory(rootPath string) (*ProjectAnalysis, error) {
+	return e.AnalyzeDirectoryWithProgress(rootPath, nil)
+}
+
+// AnalyzeDirectoryWithProgress analyzes all supported files in a directory with progress reporting
+func (e *Engine) AnalyzeDirectoryWithProgress(rootPath string, progressCallback func(current, total int, filePath string)) (*ProjectAnalysis, error) {
+	// Create file walker
+	walker := NewFileWalker(e.parserRegistry, e.config)
+	
+	// Start worker pool
+	e.workerPool.Start()
+	defer e.workerPool.Stop()
+	
+	// Walk directory to find files
+	walkResultChan, err := walker.Walk(rootPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to walk directory: %w", err)
+	}
+	
+	// Collect all files first to know total count
+	var walkResults []WalkResult
+	for result := range walkResultChan {
+		if result.Error != nil {
+			// Log error but continue
+			fmt.Printf("Warning: %v\n", result.Error)
+			continue
+		}
+		walkResults = append(walkResults, result)
+	}
+	
+	totalFiles := len(walkResults)
+	if totalFiles == 0 {
+		return &ProjectAnalysis{
+			RootPath:     rootPath,
+			TotalFiles:   0,
+			TotalLines:   0,
+			Languages:    make(map[string]LanguageStats),
+			FileResults:  []*parser.AnalysisResult{},
+		}, nil
+	}
+	
+	// Submit jobs to worker pool
+	for _, walkResult := range walkResults {
+		content, err := e.readFileContent(walkResult.FilePath)
+		if err != nil {
+			fmt.Printf("Warning: failed to read file %s: %v\n", walkResult.FilePath, err)
+			continue
+		}
+		
+		job := AnalysisJob{
+			FilePath: walkResult.FilePath,
+			Content:  content,
+			Parser:   walkResult.Parser,
+		}
+		
+		if err := e.workerPool.SubmitJob(job); err != nil {
+			return nil, fmt.Errorf("failed to submit job for %s: %w", walkResult.FilePath, err)
+		}
+	}
+	
+	// Collect results
+	var results []*parser.AnalysisResult
+	var errors []error
+	processedCount := 0
+	
+	resultChan := e.workerPool.GetResultChannel()
+	
+	for processedCount < totalFiles {
+		select {
+		case jobResult := <-resultChan:
+			processedCount++
+			
+			if progressCallback != nil {
+				filePath := ""
+				if jobResult.Result != nil {
+					filePath = jobResult.Result.FilePath
+				}
+				progressCallback(processedCount, totalFiles, filePath)
+			}
+			
+			if jobResult.Error != nil {
+				errors = append(errors, jobResult.Error)
+				continue
+			}
+			
+			if jobResult.Result != nil {
+				results = append(results, jobResult.Result)
+			}
+		}
+	}
+	
+	// Aggregate results into project analysis
+	analysis := e.aggregateResults(rootPath, results)
+	
+	// Report any errors that occurred
+	if len(errors) > 0 {
+		fmt.Printf("Analysis completed with %d errors\n", len(errors))
+		for _, err := range errors {
+			fmt.Printf("  Error: %v\n", err)
+		}
+	}
+	
+	return analysis, nil
+}
+
+// AnalyzeFile analyzes a single file
+func (e *Engine) AnalyzeFile(filePath string) (*parser.AnalysisResult, error) {
+	// Get parser for file
+	parser, err := e.parserRegistry.GetParser(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("no parser available for file %s: %w", filePath, err)
+	}
+	
+	// Read file content
+	content, err := e.readFileContent(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
+	}
+	
+	// Parse file
+	result, err := parser.Parse(filePath, content)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse file %s: %w", filePath, err)
+	}
+	
+	return result, nil
 }
 
 // WorkerPool manages concurrent file processing
@@ -161,4 +292,70 @@ func (w *worker) start(wg *sync.WaitGroup) {
 			return
 		}
 	}
+}
+
+// readFileContent reads the content of a file with size limits
+func (e *Engine) readFileContent(filePath string) ([]byte, error) {
+	// Check file size if limit is set
+	if e.config.MaxFileSize > 0 {
+		info, err := os.Stat(filePath)
+		if err != nil {
+			return nil, err
+		}
+		
+		if info.Size() > e.config.MaxFileSize {
+			return nil, fmt.Errorf("file %s exceeds size limit (%d bytes)", filePath, e.config.MaxFileSize)
+		}
+	}
+	
+	return os.ReadFile(filePath)
+}
+
+// aggregateResults combines individual file analysis results into a project analysis
+func (e *Engine) aggregateResults(rootPath string, results []*parser.AnalysisResult) *ProjectAnalysis {
+	analysis := &ProjectAnalysis{
+		RootPath:     rootPath,
+		TotalFiles:   len(results),
+		TotalLines:   0,
+		Languages:    make(map[string]LanguageStats),
+		FileResults:  results,
+		GeneratedAt:  time.Now(),
+	}
+	
+	// Aggregate statistics
+	for _, result := range results {
+		analysis.TotalLines += result.LineCount
+		
+		// Update language statistics
+		langStats, exists := analysis.Languages[result.Language]
+		if !exists {
+			langStats = LanguageStats{}
+		}
+		
+		langStats.FileCount++
+		langStats.LineCount += result.LineCount
+		langStats.FunctionCount += len(result.Functions)
+		langStats.ClassCount += len(result.Classes)
+		langStats.Complexity += result.Complexity
+		
+		analysis.Languages[result.Language] = langStats
+	}
+	
+	return analysis
+}
+
+// GetSupportedExtensions returns all supported file extensions
+func (e *Engine) GetSupportedExtensions() []string {
+	return e.parserRegistry.GetSupportedExtensions()
+}
+
+// IsFileSupported checks if a file is supported for analysis
+func (e *Engine) IsFileSupported(filePath string) bool {
+	return e.parserRegistry.IsSupported(filePath)
+}
+
+// GetFileWalkerStats returns statistics about files in a directory
+func (e *Engine) GetFileWalkerStats(rootPath string) (*WalkStats, error) {
+	walker := NewFileWalker(e.parserRegistry, e.config)
+	return walker.GetStats(rootPath)
 }
