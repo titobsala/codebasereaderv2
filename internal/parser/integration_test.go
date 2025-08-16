@@ -48,6 +48,75 @@ func TestGoParser_IntegrationWithRealFile(t *testing.T) {
 		result.LineCount, len(result.Functions), len(result.Imports))
 }
 
+func TestPythonParser_IntegrationWithSampleCode(t *testing.T) {
+	parser := NewPythonParser()
+	
+	// Test with sample Python code
+	content := `#!/usr/bin/env python3
+"""Sample Python module for testing."""
+
+import os
+from typing import List, Optional
+
+class Calculator:
+    """A simple calculator class."""
+    
+    def __init__(self, name: str):
+        self.name = name
+    
+    def add(self, a: int, b: int) -> int:
+        """Add two numbers."""
+        return a + b
+    
+    def divide(self, a: int, b: int) -> Optional[float]:
+        """Divide two numbers."""
+        if b == 0:
+            return None
+        return a / b
+
+def main():
+    """Main function."""
+    calc = Calculator("test")
+    result = calc.add(5, 3)
+    print(f"Result: {result}")
+
+if __name__ == "__main__":
+    main()
+`
+
+	result, err := parser.Parse("test.py", []byte(content))
+	if err != nil {
+		t.Fatalf("Parse failed: %v", err)
+	}
+
+	// Basic validation
+	if result.Language != "Python" {
+		t.Errorf("Expected language 'Python', got '%s'", result.Language)
+	}
+
+	if result.LineCount == 0 {
+		t.Error("Expected line count > 0")
+	}
+
+	// Should find the main function
+	if len(result.Functions) == 0 {
+		t.Error("Expected to find functions")
+	}
+
+	// Should find the Calculator class
+	if len(result.Classes) == 0 {
+		t.Error("Expected to find classes")
+	}
+
+	// Should find imports
+	if len(result.Imports) == 0 {
+		t.Error("Expected to find imports")
+	}
+
+	t.Logf("Successfully parsed Python code: %d lines, %d functions, %d classes, %d imports", 
+		result.LineCount, len(result.Functions), len(result.Classes), len(result.Imports))
+}
+
 func TestGoParser_RegistryIntegration(t *testing.T) {
 	registry := NewParserRegistry()
 	goParser := NewGoParser()
@@ -86,5 +155,55 @@ func hello() string {
 
 	if result.Functions[0].Name != "hello" {
 		t.Errorf("Expected function name 'hello', got '%s'", result.Functions[0].Name)
+	}
+}
+
+func TestPythonParser_RegistryIntegration(t *testing.T) {
+	registry := NewParserRegistry()
+	pythonParser := NewPythonParser()
+
+	// Register the Python parser
+	err := registry.RegisterParser(pythonParser)
+	if err != nil {
+		t.Fatalf("Failed to register Python parser: %v", err)
+	}
+
+	// Test that we can get the parser back
+	parser, err := registry.GetParser("test.py")
+	if err != nil {
+		t.Fatalf("Failed to get parser for .py file: %v", err)
+	}
+
+	if parser.GetLanguageName() != "Python" {
+		t.Errorf("Expected Python parser, got %s", parser.GetLanguageName())
+	}
+
+	// Test that the parser works through the registry
+	code := `def greet(name):
+    return f"Hello, {name}!"
+
+class Person:
+    def __init__(self, name):
+        self.name = name`
+
+	result, err := parser.Parse("test.py", []byte(code))
+	if err != nil {
+		t.Fatalf("Parse through registry failed: %v", err)
+	}
+
+	if len(result.Functions) != 1 {
+		t.Errorf("Expected 1 function, got %d", len(result.Functions))
+	}
+
+	if result.Functions[0].Name != "greet" {
+		t.Errorf("Expected function name 'greet', got '%s'", result.Functions[0].Name)
+	}
+
+	if len(result.Classes) != 1 {
+		t.Errorf("Expected 1 class, got %d", len(result.Classes))
+	}
+
+	if result.Classes[0].Name != "Person" {
+		t.Errorf("Expected class name 'Person', got '%s'", result.Classes[0].Name)
 	}
 }

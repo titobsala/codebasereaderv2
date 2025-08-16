@@ -3,6 +3,7 @@ package tui
 import (
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/tito-sala/codebasereaderv2/internal/engine"
+	"github.com/tito-sala/codebasereaderv2/internal/metrics"
 )
 
 // ViewType represents different views in the TUI
@@ -14,30 +15,33 @@ const (
 	ConfigView
 	HelpView
 	LoadingView
+	MetricsView
+	QualityView
+	DependencyView
 )
 
 // MainModel represents the main TUI model
 type MainModel struct {
-	fileTree     FileTreeModel
-	contentView  ContentViewModel
-	statusBar    StatusBarModel
-	inputField   textinput.Model
-	currentView  ViewType
-	analysisData *AnalysisData
-	loading      bool
-	error        error
-	width        int
-	height       int
+	fileTree       FileTreeModel
+	contentView    ContentViewModel
+	statusBar      StatusBarModel
+	inputField     textinput.Model
+	currentView    ViewType
+	analysisData   *AnalysisData
+	loading        bool
+	error          error
+	width          int
+	height         int
+	analysisEngine *engine.Engine
+	progressInfo   *ProgressInfo
 }
 
-// FileTreeModel represents the file tree navigation component
-type FileTreeModel struct {
-	items       []FileTreeItem
-	cursor      int
-	selected    map[int]bool
-	expanded    map[string]bool
-	rootPath    string
-	currentPath string
+// ProgressInfo contains information about ongoing analysis progress
+type ProgressInfo struct {
+	Current  int
+	Total    int
+	FilePath string
+	Message  string
 }
 
 // FileTreeItem represents an item in the file tree
@@ -51,23 +55,6 @@ type FileTreeItem struct {
 	Children    []FileTreeItem
 }
 
-// ContentViewModel represents the content display area
-type ContentViewModel struct {
-	content     string
-	scrollY     int
-	maxScroll   int
-	showMetrics bool
-	showSummary bool
-}
-
-// StatusBarModel represents the status bar at the bottom
-type StatusBarModel struct {
-	message    string
-	progress   float64
-	showHelp   bool
-	keybinds   []KeyBind
-}
-
 // KeyBind represents a keyboard shortcut
 type KeyBind struct {
 	Key         string
@@ -76,10 +63,11 @@ type KeyBind struct {
 
 // AnalysisData contains the current analysis results
 type AnalysisData struct {
-	ProjectAnalysis *engine.ProjectAnalysis
-	CurrentFile     string
-	Summary         string
-	Error           error
+	ProjectAnalysis         *engine.ProjectAnalysis
+	EnhancedProjectAnalysis *metrics.EnhancedProjectAnalysis
+	CurrentFile             string
+	Summary                 string
+	Error                   error
 }
 
 // TUIConfig contains configuration for the TUI

@@ -6,14 +6,17 @@ import (
 	"sync"
 	"time"
 
+	"github.com/tito-sala/codebasereaderv2/internal/metrics"
 	"github.com/tito-sala/codebasereaderv2/internal/parser"
 )
 
 // Engine orchestrates the codebase analysis process
 type Engine struct {
-	parserRegistry *parser.ParserRegistry
-	config         *Config
-	workerPool     *WorkerPool
+	parserRegistry    *parser.ParserRegistry
+	config            *Config
+	workerPool        *WorkerPool
+	metricsCalculator *metrics.Calculator
+	metricsAggregator *metrics.Aggregator
 }
 
 // NewEngine creates a new analysis engine with the given configuration
@@ -23,9 +26,11 @@ func NewEngine(config *Config) *Engine {
 	}
 
 	return &Engine{
-		parserRegistry: parser.NewParserRegistry(),
-		config:         config,
-		workerPool:     NewWorkerPool(config.MaxWorkers),
+		parserRegistry:    parser.NewParserRegistry(),
+		config:            config,
+		workerPool:        NewWorkerPool(config.MaxWorkers),
+		metricsCalculator: metrics.NewCalculator(),
+		metricsAggregator: metrics.NewAggregator(),
 	}
 }
 
@@ -102,9 +107,10 @@ func (e *Engine) AnalyzeDirectoryWithProgress(rootPath string, progressCallback 
 		}
 		
 		job := AnalysisJob{
-			FilePath: walkResult.FilePath,
-			Content:  content,
-			Parser:   walkResult.Parser,
+			FilePath:          walkResult.FilePath,
+			Content:           content,
+			Parser:            walkResult.Parser,
+			MetricsCalculator: e.metricsCalculator,
 		}
 		
 		if err := e.workerPool.SubmitJob(job); err != nil {
@@ -176,6 +182,9 @@ func (e *Engine) AnalyzeFile(filePath string) (*parser.AnalysisResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse file %s: %w", filePath, err)
 	}
+	
+	// Calculate enhanced metrics
+	e.metricsCalculator.CalculateFileMetrics(result, content)
 	
 	return result, nil
 }
@@ -284,6 +293,10 @@ func (w *worker) start(wg *sync.WaitGroup) {
 		select {
 		case job := <-w.jobQueue:
 			result, err := job.Parser.Parse(job.FilePath, job.Content)
+			if err == nil && result != nil && job.MetricsCalculator != nil {
+				// Calculate enhanced metrics for the file
+				job.MetricsCalculator.CalculateFileMetrics(result, job.Content)
+			}
 			w.resultQueue <- AnalysisJobResult{
 				Result: result,
 				Error:  err,
@@ -314,15 +327,15 @@ func (e *Engine) readFileContent(filePath string) ([]byte, error) {
 // aggregateResults combines individual file analysis results into a project analysis
 func (e *Engine) aggregateResults(rootPath string, results []*parser.AnalysisResult) *ProjectAnalysis {
 	analysis := &ProjectAnalysis{
-		RootPath:     rootPath,
-		TotalFiles:   len(results),
-		TotalLines:   0,
-		Languages:    make(map[string]LanguageStats),
-		FileResults:  results,
-		GeneratedAt:  time.Now(),
+		RootPath:    rootPath,
+		TotalFiles:  len(results),
+		TotalLines:  0,
+		Languages:   make(map[string]LanguageStats),
+		FileResults: results,
+		GeneratedAt: time.Now(),
 	}
 	
-	// Aggregate statistics
+	// Aggregate basic statistics
 	for _, result := range results {
 		analysis.TotalLines += result.LineCount
 		
@@ -342,6 +355,43 @@ func (e *Engine) aggregateResults(rootPath string, results []*parser.AnalysisRes
 	}
 	
 	return analysis
+}
+
+// AnalyzeDirectoryWithEnhancedMetrics analyzes all supported files in a directory with comprehensive metrics
+func (e *Engine) AnalyzeDirectoryWithEnhancedMetrics(rootPath string) (*metrics.EnhancedProjectAnalysis, error) {
+	return e.AnalyzeDirectoryWithEnhancedMetricsAndProgress(rootPath, nil)
+}
+
+// AnalyzeDirectoryWithEnhancedMetricsAndProgress analyzes with enhanced metrics and progress reporting
+func (e *Engine) AnalyzeDirectoryWithEnhancedMetricsAndProgress(rootPath string, progressCallback func(current, total int, filePath string)) (*metrics.EnhancedProjectAnalysis, error) {
+	// First get basic analysis
+	basicAnalysis, err := e.AnalyzeDirectoryWithProgress(rootPath, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Use metrics aggregator to calculate comprehensive project metrics
+	enhancedAnalysis := e.metricsAggregator.AggregateProjectMetrics(basicAnalysis.FileResults, rootPath)
+	
+	// Copy basic fields
+	enhancedAnalysis.TotalLines = basicAnalysis.TotalLines
+	enhancedAnalysis.GeneratedAt = basicAnalysis.GeneratedAt
+	enhancedAnalysis.Summary = basicAnalysis.Summary
+	
+	// Convert basic language stats to enhanced language stats
+	enhancedLanguages := make(map[string]metrics.LanguageStats)
+	for lang, basicStats := range basicAnalysis.Languages {
+		enhancedLanguages[lang] = metrics.LanguageStats{
+			FileCount:     basicStats.FileCount,
+			LineCount:     basicStats.LineCount,
+			FunctionCount: basicStats.FunctionCount,
+			ClassCount:    basicStats.ClassCount,
+			Complexity:    basicStats.Complexity,
+		}
+	}
+	enhancedAnalysis.Languages = enhancedLanguages
+	
+	return enhancedAnalysis, nil
 }
 
 // GetSupportedExtensions returns all supported file extensions

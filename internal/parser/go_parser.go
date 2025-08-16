@@ -20,13 +20,14 @@ func NewGoParser() *GoParser {
 // Parse analyzes Go source code and returns structured results
 func (g *GoParser) Parse(filePath string, content []byte) (*AnalysisResult, error) {
 	result := &AnalysisResult{
-		FilePath:   filePath,
-		Language:   "Go",
-		Functions:  []FunctionInfo{},
-		Classes:    []ClassInfo{},
-		Imports:    []string{},
-		Errors:     []ParseError{},
-		AnalyzedAt: time.Now(),
+		FilePath:     filePath,
+		Language:     "Go",
+		Functions:    []FunctionInfo{},
+		Classes:      []ClassInfo{},
+		Imports:      []string{},
+		Dependencies: []Dependency{},
+		Errors:       []ParseError{},
+		AnalyzedAt:   time.Now(),
 	}
 
 	// Create a new token file set
@@ -99,12 +100,17 @@ func (g *GoParser) extractFunctionInfo(fset *token.FileSet, funcDecl *ast.FuncDe
 	endPos := fset.Position(funcDecl.End())
 
 	funcInfo := FunctionInfo{
-		Name:       funcDecl.Name.Name,
-		LineStart:  startPos.Line,
-		LineEnd:    endPos.Line,
-		Parameters: []string{},
-		ReturnType: "",
-		Complexity: g.calculateComplexity(funcDecl),
+		Name:                 funcDecl.Name.Name,
+		LineStart:            startPos.Line,
+		LineEnd:              endPos.Line,
+		Parameters:           []string{},
+		ReturnType:           "",
+		Complexity:           g.calculateComplexity(funcDecl),
+		CyclomaticComplexity: g.calculateComplexity(funcDecl),
+		LinesOfCode:          endPos.Line - startPos.Line + 1,
+		IsPublic:             g.isPublicFunction(funcDecl.Name.Name),
+		IsAsync:              false, // Go doesn't have async functions like Python
+		HasDocstring:         funcDecl.Doc != nil && len(funcDecl.Doc.List) > 0,
 	}
 
 	// Extract parameters
@@ -120,6 +126,8 @@ func (g *GoParser) extractFunctionInfo(fset *token.FileSet, funcDecl *ast.FuncDe
 			}
 		}
 	}
+	
+	funcInfo.ParameterCount = len(funcInfo.Parameters)
 
 	// Extract return type
 	if funcDecl.Type.Results != nil {
@@ -143,11 +151,15 @@ func (g *GoParser) extractStructInfo(fset *token.FileSet, typeSpec *ast.TypeSpec
 	endPos := fset.Position(structType.End())
 
 	classInfo := ClassInfo{
-		Name:      typeSpec.Name.Name,
-		LineStart: startPos.Line,
-		LineEnd:   endPos.Line,
-		Methods:   []FunctionInfo{},
-		Fields:    []string{},
+		Name:         typeSpec.Name.Name,
+		LineStart:    startPos.Line,
+		LineEnd:      endPos.Line,
+		Methods:      []FunctionInfo{},
+		Fields:       []string{},
+		LinesOfCode:  endPos.Line - startPos.Line + 1,
+		IsPublic:     g.isPublicType(typeSpec.Name.Name),
+		BaseClasses:  []string{}, // Go doesn't have inheritance
+		HasDocstring: typeSpec.Doc != nil && len(typeSpec.Doc.List) > 0,
 	}
 
 	// Extract fields
@@ -164,7 +176,8 @@ func (g *GoParser) extractStructInfo(fset *token.FileSet, typeSpec *ast.TypeSpec
 			}
 		}
 	}
-
+	
+	classInfo.FieldCount = len(classInfo.Fields)
 	return classInfo
 }
 
@@ -296,4 +309,14 @@ func (g *GoParser) GetSupportedExtensions() []string {
 // GetLanguageName returns the human-readable language name
 func (g *GoParser) GetLanguageName() string {
 	return "Go"
+}
+
+// isPublicFunction determines if a function is public (exported) in Go
+func (g *GoParser) isPublicFunction(name string) bool {
+	return len(name) > 0 && name[0] >= 'A' && name[0] <= 'Z'
+}
+
+// isPublicType determines if a type is public (exported) in Go
+func (g *GoParser) isPublicType(name string) bool {
+	return len(name) > 0 && name[0] >= 'A' && name[0] <= 'Z'
 }
