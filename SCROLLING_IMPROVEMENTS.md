@@ -1,8 +1,8 @@
 # Scrolling and UI Improvements
 
-## Issues Fixed
+## Issue WIP
 
-### 1. Scrolling Lag and Position Jumping ✅
+### 1. Scrolling Lag and Position Jumping 
 
 **Problem**: The screen would lag and jump position when scrolling through metrics, making navigation difficult.
 
@@ -95,12 +95,6 @@ case "python":
 
 ### Symbol Updates
 - `internal/tui/content.go`: Updated `getLangIcon()` function
-
-## Testing
-- ✅ All existing tests pass
-- ✅ Scroll behavior is now stable and responsive
-- ✅ Language symbols display correctly
-- ✅ No performance regressions
 
 ## Impact
 These improvements significantly enhance the user experience when navigating through metrics and analysis results, making the TUI much more pleasant and responsive to use.
