@@ -228,9 +228,6 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
@@ -239,15 +236,3 @@ This project is built with amazing open-source libraries:
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) - TUI framework
 - [Lipgloss](https://github.com/charmbracelet/lipgloss) - Terminal styling
 - [Bubbles](https://github.com/charmbracelet/bubbles) - TUI components
-
-## 📞 Support
-
-If you have any questions or run into issues, please:
-
-1. Check the [Issues](https://github.com/your-username/codebasereaderv2/issues) page
-2. Create a new issue with detailed information
-3. Include your Go version and operating system
-
----
-
-**Made with ❤️ and Go**
