@@ -6,7 +6,6 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/tito-sala/codebasereaderv2/internal/engine"
 )
 
@@ -23,6 +22,10 @@ type ContentViewModel struct {
 	analysisData   *AnalysisData
 	metricsDisplay *MetricsDisplay
 	currentMode    MetricsDisplayMode
+	
+	// Performance optimization: cache split lines
+	cachedLines     []string
+	cachedContent   string
 }
 
 // NewContentViewModel creates a new content view model
@@ -39,7 +42,7 @@ func NewContentViewModel() *ContentViewModel {
 }
 
 // Init initializes the content view
-func (m ContentViewModel) Init() tea.Cmd {
+func (m *ContentViewModel) Init() tea.Cmd {
 	return nil
 }
 
@@ -169,8 +172,8 @@ func (m *ContentViewModel) View(width, height int) string {
 		return b.String()
 	}
 
-	// Split content into lines
-	lines := strings.Split(m.content, "\n")
+	// Get cached lines for better performance
+	lines := m.getCachedLines()
 	newMaxScroll := max(0, len(lines)-contentHeight)
 	
 	// Only update maxScroll if content changed significantly
@@ -223,11 +226,22 @@ func (m *ContentViewModel) View(width, height int) string {
 	return b.String()
 }
 
+// getCachedLines returns cached split lines, updating cache if content changed
+func (m *ContentViewModel) getCachedLines() []string {
+	if m.content != m.cachedContent {
+		m.cachedLines = strings.Split(m.content, "\n")
+		m.cachedContent = m.content
+	}
+	return m.cachedLines
+}
+
 // SetContent sets the content to display
 func (m *ContentViewModel) SetContent(filePath, content string) {
 	m.filePath = filePath
 	m.content = content
 	m.scrollY = 0
+	// Clear cache to force update on next access
+	m.cachedContent = ""
 }
 
 // SetMetrics sets metrics content
@@ -274,6 +288,8 @@ func (m *ContentViewModel) updateContentFromAnalysis() {
 		}
 	}
 	m.scrollY = 0 // Reset scroll when content changes
+	// Clear cache to force update on next access
+	m.cachedContent = ""
 }
 
 // formatAnalysisOverview formats the analysis overview
@@ -282,20 +298,13 @@ func (m *ContentViewModel) formatAnalysisOverview() string {
 	var b strings.Builder
 
 	// Header with styling
-	headerStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7D56F4")).
-		Bold(true).
-		Render("📊 Codebase Analysis Results")
+	header := headerStyle.Render("📊 Codebase Analysis Results")
 	
-	b.WriteString(headerStyle + "\n")
+	b.WriteString(header + "\n")
 	b.WriteString(strings.Repeat("═", 50) + "\n\n")
 
 	// Project summary with better formatting
-	summaryStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#87CEEB")).
-		Bold(true)
-	
-	b.WriteString(summaryStyle.Render("📋 Project Summary") + "\n")
+	b.WriteString(sectionStyle.Render("📋 Project Summary") + "\n")
 	b.WriteString(fmt.Sprintf("📁 Root Path: %s\n", analysis.RootPath))
 	b.WriteString(fmt.Sprintf("📄 Total Files: %s\n", formatNumber(analysis.TotalFiles)))
 	b.WriteString(fmt.Sprintf("📝 Total Lines: %s\n", formatNumber(analysis.TotalLines)))
@@ -304,7 +313,7 @@ func (m *ContentViewModel) formatAnalysisOverview() string {
 
 	// Language breakdown with visual bars
 	if len(analysis.Languages) > 0 {
-		b.WriteString(summaryStyle.Render("🌐 Language Breakdown") + "\n")
+		b.WriteString(sectionStyle.Render("🌐 Language Breakdown") + "\n")
 		
 		// Sort languages by line count for better display
 		type langStat struct {
@@ -355,7 +364,7 @@ func (m *ContentViewModel) formatAnalysisOverview() string {
 
 	// Top files by size/complexity
 	if len(analysis.FileResults) > 0 {
-		b.WriteString(summaryStyle.Render("📋 File Analysis Summary") + "\n")
+		b.WriteString(sectionStyle.Render("📋 File Analysis Summary") + "\n")
 		
 		// Show top 10 files by line count
 		count := len(analysis.FileResults)
@@ -393,44 +402,6 @@ func (m *ContentViewModel) formatAnalysisOverview() string {
 	return b.String()
 }
 
-// getLangIcon returns an icon for the programming language
-func getLangIcon(lang string) string {
-	switch strings.ToLower(lang) {
-	case "go":
-		return "⚡" // Lightning for Go (fast)
-	case "python":
-		return "🐍" // Snake for Python
-	case "javascript":
-		return "JS"
-	case "typescript":
-		return "TS"
-	case "java":
-		return "☕"
-	case "c":
-		return "C"
-	case "c++", "cpp":
-		return "C++"
-	case "rust":
-		return "🦀"
-	case "php":
-		return "PHP"
-	case "ruby":
-		return "💎"
-	default:
-		return "📄"
-	}
-}
-
-// formatNumber formats numbers with thousand separators
-func formatNumber(n int) string {
-	if n < 1000 {
-		return fmt.Sprintf("%d", n)
-	}
-	if n < 1000000 {
-		return fmt.Sprintf("%.1fK", float64(n)/1000)
-	}
-	return fmt.Sprintf("%.1fM", float64(n)/1000000)
-}
 
 // formatAnalysisMetrics formats detailed metrics
 func (m *ContentViewModel) formatAnalysisMetrics() string {

@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"runtime"
 	"time"
 
 	"github.com/tito-sala/codebasereaderv2/internal/metrics"
@@ -58,7 +59,7 @@ type Config struct {
 func DefaultConfig() *Config {
 	return &Config{
 		AIProvider:      "anthropic",
-		MaxWorkers:      4,
+		MaxWorkers:      runtime.NumCPU(),
 		OutputFormat:    "json",
 		ExcludePatterns: []string{"node_modules", ".git", "vendor", "__pycache__", ".venv"},
 		IncludePatterns: []string{},

@@ -199,6 +199,7 @@ type WorkerPool struct {
 	stopChan    chan struct{}
 	running     bool
 	mutex       sync.RWMutex
+	stopOnce    sync.Once
 }
 
 // NewWorkerPool creates a new worker pool with the specified number of workers
@@ -209,8 +210,8 @@ func NewWorkerPool(maxWorkers int) *WorkerPool {
 
 	return &WorkerPool{
 		maxWorkers:  maxWorkers,
-		jobQueue:    make(chan AnalysisJob, maxWorkers*2),
-		resultQueue: make(chan AnalysisJobResult, maxWorkers*2),
+		jobQueue:    make(chan AnalysisJob, maxWorkers*100),
+		resultQueue: make(chan AnalysisJobResult, maxWorkers*100),
 		workers:     make([]*worker, 0, maxWorkers),
 		stopChan:    make(chan struct{}),
 		running:     false,
@@ -250,7 +251,11 @@ func (wp *WorkerPool) Stop() {
 		return
 	}
 
-	close(wp.stopChan)
+	// Use sync.Once to ensure channel is only closed once
+	wp.stopOnce.Do(func() {
+		close(wp.stopChan)
+	})
+	
 	wp.wg.Wait()
 	wp.running = false
 }

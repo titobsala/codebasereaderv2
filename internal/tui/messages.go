@@ -120,3 +120,17 @@ type MetricsFilterMsg struct {
 type MetricsSortMsg struct {
 	SortBy string
 }
+
+// ShowConfirmationMsg shows a confirmation dialog
+type ShowConfirmationMsg struct {
+	Message string
+	Action  string
+	Data    interface{}
+}
+
+// ConfirmationResponseMsg handles confirmation responses
+type ConfirmationResponseMsg struct {
+	Confirmed bool
+	Action    string
+	Data      interface{}
+}

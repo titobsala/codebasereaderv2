@@ -18,22 +18,32 @@ const (
 	MetricsView
 	QualityView
 	DependencyView
+	ConfirmationView
 )
 
 // MainModel represents the main TUI model
 type MainModel struct {
-	fileTree       *FileTreeModel
-	contentView    *ContentViewModel
-	statusBar      StatusBarModel
-	inputField     textinput.Model
-	currentView    ViewType
-	analysisData   *AnalysisData
-	loading        bool
-	error          error
-	width          int
-	height         int
-	analysisEngine *engine.Engine
-	progressInfo   *ProgressInfo
+	fileTree          *FileTreeModel
+	contentView       *ContentViewModel
+	statusBar         StatusBarModel
+	inputField        textinput.Model
+	currentView       ViewType
+	analysisData      *AnalysisData
+	loading           bool
+	error             error
+	width             int
+	height            int
+	analysisEngine    *engine.Engine
+	progressInfo      *ProgressInfo
+	confirmationState *ConfirmationState
+}
+
+// ConfirmationState holds state for confirmation dialogs
+type ConfirmationState struct {
+	Message    string
+	Action     string
+	Data       interface{}
+	PreviousView ViewType
 }
 
 // ProgressInfo contains information about ongoing analysis progress

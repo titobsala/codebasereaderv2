@@ -115,11 +115,6 @@ func (m *MetricsDisplay) renderNoData() string {
 // renderOverview renders the overview mode
 func (m *MetricsDisplay) renderOverview(analysis *metrics.EnhancedProjectAnalysis) string {
 	var b strings.Builder
-
-	// Header
-	headerStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7D56F4")).
-		Bold(true)
 	
 	b.WriteString(headerStyle.Render("📊 Project Metrics Overview") + "\n")
 	b.WriteString(strings.Repeat("═", 60) + "\n\n")
@@ -145,10 +140,6 @@ func (m *MetricsDisplay) renderOverview(analysis *metrics.EnhancedProjectAnalysi
 // renderDetailed renders the detailed mode
 func (m *MetricsDisplay) renderDetailed(analysis *metrics.EnhancedProjectAnalysis) string {
 	var b strings.Builder
-
-	headerStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7D56F4")).
-		Bold(true)
 	
 	b.WriteString(headerStyle.Render("📈 Detailed Metrics Analysis") + "\n")
 	b.WriteString(strings.Repeat("═", 60) + "\n\n")
@@ -170,10 +161,6 @@ func (m *MetricsDisplay) renderDetailed(analysis *metrics.EnhancedProjectAnalysi
 // renderQuality renders the quality mode
 func (m *MetricsDisplay) renderQuality(analysis *metrics.EnhancedProjectAnalysis) string {
 	var b strings.Builder
-
-	headerStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7D56F4")).
-		Bold(true)
 	
 	b.WriteString(headerStyle.Render("🏆 Code Quality Analysis") + "\n")
 	b.WriteString(strings.Repeat("═", 60) + "\n\n")
@@ -195,10 +182,6 @@ func (m *MetricsDisplay) renderQuality(analysis *metrics.EnhancedProjectAnalysis
 // renderDependencies renders the dependency mode
 func (m *MetricsDisplay) renderDependencies(analysis *metrics.EnhancedProjectAnalysis) string {
 	var b strings.Builder
-
-	headerStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7D56F4")).
-		Bold(true)
 	
 	b.WriteString(headerStyle.Render("🔗 Dependency Analysis") + "\n")
 	b.WriteString(strings.Repeat("═", 60) + "\n\n")
@@ -230,10 +213,6 @@ func (m *MetricsDisplay) renderDependencies(analysis *metrics.EnhancedProjectAna
 // renderProjectSummary renders the project summary
 func (m *MetricsDisplay) renderProjectSummary(analysis *metrics.EnhancedProjectAnalysis) string {
 	var b strings.Builder
-
-	sectionStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#87CEEB")).
-		Bold(true)
 	
 	b.WriteString(sectionStyle.Render("📋 Project Summary") + "\n")
 	b.WriteString(fmt.Sprintf("📁 Root Path: %s\n", analysis.RootPath))
@@ -247,18 +226,11 @@ func (m *MetricsDisplay) renderProjectSummary(analysis *metrics.EnhancedProjectA
 // renderQualityScore renders the quality score
 func (m *MetricsDisplay) renderQualityScore(score metrics.QualityScore) string {
 	var b strings.Builder
-
-	sectionStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#87CEEB")).
-		Bold(true)
 	
 	b.WriteString(sectionStyle.Render("🏆 Quality Score") + "\n")
 	
-	// Grade with color
-	gradeColor := m.getGradeColor(score.Grade)
-	gradeStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color(gradeColor)).
-		Bold(true)
+	// Use pre-cached grade style
+	gradeStyle := getGradeStyle(score.Grade)
 	
 	b.WriteString(fmt.Sprintf("📊 Overall: %.1f%% (%s)\n", 
 		score.Overall, gradeStyle.Render(score.Grade)))
@@ -274,10 +246,6 @@ func (m *MetricsDisplay) renderQualityScore(score metrics.QualityScore) string {
 // renderLanguageBreakdown renders language statistics
 func (m *MetricsDisplay) renderLanguageBreakdown(languages map[string]metrics.LanguageStats) string {
 	var b strings.Builder
-
-	sectionStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#87CEEB")).
-		Bold(true)
 	
 	b.WriteString(sectionStyle.Render("🌐 Language Breakdown") + "\n")
 
@@ -709,10 +677,7 @@ func (m *MetricsDisplay) applyScrolling(content string) string {
 	if m.maxScroll > 0 && len(lines) > availableHeight {
 		scrollInfo := fmt.Sprintf("\n\n📊 Line %d-%d of %d (↑↓ to scroll)", 
 			startLine+1, min(endLine, len(lines)), len(lines))
-		result += lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#626262")).
-			Italic(true).
-			Render(scrollInfo)
+		result += scrollInfoStyle.Render(scrollInfo)
 	}
 	
 	return result

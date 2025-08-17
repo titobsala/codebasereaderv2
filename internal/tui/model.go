@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -30,15 +29,7 @@ func NewMainModel() *MainModel {
 
 	return &MainModel{
 		fileTree:       NewFileTreeModel(),
-		contentView:    &ContentViewModel{
-			content:        "Select a file to view its content",
-			scrollY:        0,
-			maxScroll:      0,
-			showMetrics:    false,
-			showSummary:    false,
-			metricsDisplay: NewMetricsDisplay(),
-			currentMode:    OverviewMode,
-		},
+		contentView:    NewContentViewModel(),
 		statusBar:      NewStatusBarModel(),
 		inputField:     ti,
 		currentView:    FileTreeView,
@@ -133,6 +124,31 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.fileTree, cmd = m.fileTree.Update(msg)
 			cmds = append(cmds, cmd)
 
+		case ConfirmationView:
+			// Handle confirmation dialog input
+			switch msg.String() {
+			case "y", "Y":
+				if m.confirmationState != nil {
+					return m, func() tea.Msg {
+						return ConfirmationResponseMsg{
+							Confirmed: true,
+							Action:    m.confirmationState.Action,
+							Data:      m.confirmationState.Data,
+						}
+					}
+				}
+			case "n", "N", "esc":
+				if m.confirmationState != nil {
+					return m, func() tea.Msg {
+						return ConfirmationResponseMsg{
+							Confirmed: false,
+							Action:    m.confirmationState.Action,
+							Data:      m.confirmationState.Data,
+						}
+					}
+				}
+			}
+
 		case ContentView:
 			// Handle content view specific keys
 			switch msg.String() {
@@ -225,7 +241,10 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case LoadingMsg:
 		m.loading = msg.Loading
 		if msg.Loading {
-			m.statusBar.SetMessage("Analyzing...")
+			m.currentView = LoadingView
+			m.statusBar.SetMessage("Starting analysis...")
+		} else if m.currentView == LoadingView {
+			m.currentView = FileTreeView
 		}
 		return m, nil
 
@@ -339,6 +358,41 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.progressInfo = nil
 		m.statusBar.SetMessage(fmt.Sprintf("Analysis cancelled: %s", msg.Reason))
 		return m, nil
+
+	case ShowConfirmationMsg:
+		m.confirmationState = &ConfirmationState{
+			Message:      msg.Message,
+			Action:       msg.Action,
+			Data:         msg.Data,
+			PreviousView: m.currentView,
+		}
+		m.currentView = ConfirmationView
+		return m, nil
+
+	case ConfirmationResponseMsg:
+		if m.confirmationState != nil {
+			// Restore previous view
+			m.currentView = m.confirmationState.PreviousView
+			
+			if msg.Confirmed {
+				// Execute the confirmed action
+				switch msg.Action {
+				case "navigate_parent":
+					// Navigate to parent directory
+					if parentPath, ok := msg.Data.(string); ok {
+						m.fileTree.currentPath = parentPath
+						m.statusBar.SetMessage(fmt.Sprintf("Navigated to: %s", parentPath))
+						cmd = m.fileTree.loadDirectory(parentPath)
+						cmds = append(cmds, cmd)
+					}
+				}
+			} else {
+				m.statusBar.SetMessage("Action cancelled")
+			}
+			
+			m.confirmationState = nil
+		}
+		return m, tea.Batch(cmds...)
 	}
 
 	return m, tea.Batch(cmds...)
@@ -372,6 +426,8 @@ func (m *MainModel) View() string {
 		content = m.renderHelpView(m.width, contentHeight)
 	case LoadingView:
 		content = m.renderLoadingView(m.width, contentHeight)
+	case ConfirmationView:
+		content = m.renderConfirmationView(m.width, contentHeight)
 	}
 
 	// Ensure content fits within available space
@@ -696,6 +752,73 @@ func (m *MainModel) renderLoadingView(width, height int) string {
 	return b.String()
 }
 
+// renderConfirmationView renders the confirmation dialog
+func (m *MainModel) renderConfirmationView(width, height int) string {
+	if m.confirmationState == nil {
+		return "No confirmation state"
+	}
+
+	var b strings.Builder
+	
+	// Center the dialog
+	dialogWidth := min(60, width-4)
+	dialogHeight := 8
+	
+	// Calculate centering
+	horizontalPadding := (width - dialogWidth) / 2
+	verticalPadding := (height - dialogHeight) / 2
+	
+	// Add vertical padding
+	for i := 0; i < verticalPadding; i++ {
+		b.WriteString("\n")
+	}
+	
+	// Dialog box style
+	dialogStyle := lipgloss.NewStyle().
+		Border(lipgloss.DoubleBorder()).
+		BorderForeground(lipgloss.Color("#FF5F87")).
+		Padding(1, 2).
+		Width(dialogWidth - 4).
+		Align(lipgloss.Center)
+	
+	// Dialog content
+	var dialogContent strings.Builder
+	
+	// Title
+	titleStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#FF5F87")).
+		Bold(true).
+		Align(lipgloss.Center)
+	dialogContent.WriteString(titleStyle.Render("⚠️  Confirmation Required") + "\n\n")
+	
+	// Message
+	messageStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#FAFAFA")).
+		Align(lipgloss.Center)
+	dialogContent.WriteString(messageStyle.Render(m.confirmationState.Message) + "\n\n")
+	
+	// Options
+	optionStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#7D56F4")).
+		Bold(true).
+		Align(lipgloss.Center)
+	dialogContent.WriteString(optionStyle.Render("Press 'y' to confirm, 'n' or 'Esc' to cancel"))
+	
+	// Render the dialog with horizontal centering
+	dialog := dialogStyle.Render(dialogContent.String())
+	
+	// Add horizontal padding to each line of the dialog
+	dialogLines := strings.Split(dialog, "\n")
+	for _, line := range dialogLines {
+		if horizontalPadding > 0 {
+			b.WriteString(strings.Repeat(" ", horizontalPadding))
+		}
+		b.WriteString(line + "\n")
+	}
+	
+	return b.String()
+}
+
 // SetError sets an error message
 func (m *MainModel) SetError(err error) {
 	m.error = err
@@ -729,11 +852,33 @@ func (m *MainModel) startAnalysis(path string) tea.Cmd {
 // performAnalysis performs the actual analysis with progress reporting
 func (m *MainModel) performAnalysis(path string) tea.Cmd {
 	return func() tea.Msg {
-		// Try enhanced analysis first
-		enhancedAnalysis, err := m.analysisEngine.AnalyzeDirectoryWithEnhancedMetrics(path)
+		// Get file statistics first to show initial progress
+		_, err := m.analysisEngine.GetFileWalkerStats(path)
 		if err != nil {
-			// Fall back to basic analysis
-			basicAnalysis, basicErr := m.analysisEngine.AnalyzeDirectory(path)
+			return ErrorMsg{Error: fmt.Errorf("failed to scan directory: %w", err)}
+		}
+		
+		// Send initial progress message
+		go func() {
+			// This is a workaround since we can't easily send progress from callback
+			// In a real implementation, we'd need a more sophisticated progress system
+		}()
+		
+		// Create a progress callback that tracks progress
+		progressCallback := func(current, total int, filePath string) {
+			// Track progress (for future enhancement)
+			_ = current // Acknowledge we receive progress updates
+			_ = total   // Total files being processed
+			_ = filePath // Current file being processed
+			// In a full implementation, we'd send this to a channel that
+			// the main loop could read from
+		}
+		
+		// Try enhanced analysis first with progress reporting
+		enhancedAnalysis, err := m.analysisEngine.AnalyzeDirectoryWithEnhancedMetricsAndProgress(path, progressCallback)
+		if err != nil {
+			// Fall back to basic analysis with progress
+			basicAnalysis, basicErr := m.analysisEngine.AnalyzeDirectoryWithProgress(path, progressCallback)
 			if basicErr != nil {
 				return ErrorMsg{Error: basicErr}
 			}
@@ -764,6 +909,8 @@ func (m *MainModel) getViewName() string {
 		return "Help"
 	case LoadingView:
 		return "Loading"
+	case ConfirmationView:
+		return "Confirmation"
 	default:
 		return "Unknown"
 	}

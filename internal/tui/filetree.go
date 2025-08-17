@@ -60,25 +60,38 @@ func (m *FileTreeModel) Update(msg tea.Msg) (*FileTreeModel, tea.Cmd) {
 				m.adjustScroll()
 			}
 		case "right", "l", "enter":
-			return m.handleSelection()
+			newM, cmd := m.handleSelection()
+			*m = newM
+			return m, cmd
 		case "left", "h":
-			return m.handleCollapse()
+			newM, cmd := m.handleCollapse()
+			*m = newM
+			return m, cmd
 		case " ":
 			m.selected[m.cursor] = !m.selected[m.cursor]
 		case "r":
 			return m, m.loadDirectory(m.rootPath)
 		case "a":
-			if m.cursor < len(m.items) {
-				item := m.items[m.cursor]
-				if item.IsDirectory {
-					return m, func() tea.Msg {
-						return DirectorySelectedMsg{Path: item.Path}
+			// Check if any items are selected
+			if m.hasSelectedItems() {
+				// Analyze selected items (existing behavior for specific selections)
+				if m.cursor < len(m.items) {
+					item := m.items[m.cursor]
+					if item.IsDirectory {
+						return m, func() tea.Msg {
+							return DirectorySelectedMsg{Path: item.Path}
+						}
+					} else {
+						// For files, show a message that analysis is for directories
+						return m, func() tea.Msg {
+							return StatusUpdateMsg{Message: "Analysis is only available for directories"}
+						}
 					}
-				} else {
-					// For files, show a message that analysis is for directories
-					return m, func() tea.Msg {
-						return StatusUpdateMsg{Message: "Analysis is only available for directories"}
-					}
+				}
+			} else {
+				// No items selected - default to analyzing current directory
+				return m, func() tea.Msg {
+					return DirectorySelectedMsg{Path: m.currentPath}
 				}
 			}
 
@@ -171,10 +184,10 @@ func (m *FileTreeModel) View(width, height int) string {
 		b.WriteString(line + "\n")
 	}
 
-	// Scroll indicator
-	if m.maxScroll > 0 {
-		scrollInfo := fmt.Sprintf("Item %d-%d of %d", startIdx+1, endIdx, len(m.items))
-		b.WriteString("\n" + helpStyle.Render(scrollInfo))
+	// Item counter showing current selection
+	if len(m.items) > 0 {
+		itemInfo := fmt.Sprintf("Item %d of %d", m.cursor+1, len(m.items))
+		b.WriteString("\n" + helpStyle.Render(itemInfo))
 	}
 
 	// Controls help
@@ -269,6 +282,11 @@ func (m FileTreeModel) renderFileTreeItem(item FileTreeItem, isCursor, isSelecte
 
 // renderTreeIndent renders tree-style indentation
 func (m FileTreeModel) renderTreeIndent(level int) string {
+	// Validate level to catch unexpected values
+	if level < 0 {
+		level = 0  // Defensive: ensure no negative indentation
+	}
+	
 	if level == 0 {
 		return ""
 	}
@@ -388,7 +406,7 @@ func (m FileTreeModel) handleSelection() (FileTreeModel, tea.Cmd) {
 	}
 }
 
-// handleCollapse handles collapsing directories or going up
+// handleCollapse handles collapsing directories or navigating to parent
 func (m FileTreeModel) handleCollapse() (FileTreeModel, tea.Cmd) {
 	if m.cursor >= len(m.items) {
 		return m, nil
@@ -399,15 +417,32 @@ func (m FileTreeModel) handleCollapse() (FileTreeModel, tea.Cmd) {
 	if item.IsDirectory && m.expanded[item.Path] {
 		// Collapse current directory
 		return m.collapseDirectory(item.Path)
-	} else {
-		// Go to parent directory
-		parent := filepath.Dir(m.currentPath)
-		if parent != m.currentPath {
-			m.currentPath = parent
-			return m, m.loadDirectory(parent)
+	}
+	
+	// If we're on the first item and it's not an expanded directory,
+	// show confirmation for parent directory navigation
+	if m.cursor == 0 {
+		// Get parent directory path
+		parentPath := filepath.Dir(m.currentPath)
+		
+		// Don't navigate if we're already at root or can't determine parent
+		if parentPath == m.currentPath || parentPath == "." {
+			return m, func() tea.Msg {
+				return StatusUpdateMsg{Message: "Already at root directory"}
+			}
+		}
+		
+		// Show confirmation dialog
+		return m, func() tea.Msg {
+			return ShowConfirmationMsg{
+				Message: fmt.Sprintf("Navigate to parent directory?\n%s", parentPath),
+				Action:  "navigate_parent",
+				Data:    parentPath,
+			}
 		}
 	}
-
+	
+	// If directory is not expanded or not a directory, do nothing
 	return m, nil
 }
 
@@ -551,7 +586,15 @@ func (m FileTreeModel) showDirectoryInfo(path string) tea.Cmd {
 	}
 }
 
-
+// hasSelectedItems returns true if any items are currently selected
+func (m FileTreeModel) hasSelectedItems() bool {
+	for _, selected := range m.selected {
+		if selected {
+			return true
+		}
+	}
+	return false
+}
 
 // DirectoryLoadedMsg is sent when directory loading is complete
 type DirectoryLoadedMsg struct {
