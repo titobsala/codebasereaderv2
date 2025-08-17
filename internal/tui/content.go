@@ -26,8 +26,8 @@ type ContentViewModel struct {
 }
 
 // NewContentViewModel creates a new content view model
-func NewContentViewModel() ContentViewModel {
-	return ContentViewModel{
+func NewContentViewModel() *ContentViewModel {
+	return &ContentViewModel{
 		content:        "Select a file to view its content",
 		scrollY:        0,
 		maxScroll:      0,
@@ -44,7 +44,7 @@ func (m ContentViewModel) Init() tea.Cmd {
 }
 
 // Update handles messages for the content view
-func (m ContentViewModel) Update(msg tea.Msg) (ContentViewModel, tea.Cmd) {
+func (m *ContentViewModel) Update(msg tea.Msg) (*ContentViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -149,7 +149,7 @@ func (m ContentViewModel) Update(msg tea.Msg) (ContentViewModel, tea.Cmd) {
 }
 
 // View renders the content view
-func (m ContentViewModel) View(width, height int) string {
+func (m *ContentViewModel) View(width, height int) string {
 	m.width = width
 	m.height = height
 
@@ -171,10 +171,28 @@ func (m ContentViewModel) View(width, height int) string {
 
 	// Split content into lines
 	lines := strings.Split(m.content, "\n")
-	m.maxScroll = max(0, len(lines)-contentHeight)
+	newMaxScroll := max(0, len(lines)-contentHeight)
+	
+	// Only update maxScroll if content changed significantly
+	if m.maxScroll != newMaxScroll {
+		m.maxScroll = newMaxScroll
+		// Ensure scroll position is still valid
+		if m.scrollY > m.maxScroll {
+			m.scrollY = m.maxScroll
+		}
+	}
 
 	// Display visible lines
 	startLine := m.scrollY
+	if startLine < 0 {
+		startLine = 0
+		m.scrollY = 0
+	}
+	if startLine >= len(lines) && len(lines) > 0 {
+		startLine = max(0, len(lines)-contentHeight)
+		m.scrollY = startLine
+	}
+	
 	endLine := min(len(lines), startLine+contentHeight)
 
 	for i := startLine; i < endLine; i++ {
@@ -379,23 +397,23 @@ func (m *ContentViewModel) formatAnalysisOverview() string {
 func getLangIcon(lang string) string {
 	switch strings.ToLower(lang) {
 	case "go":
-		return "🐹"
+		return "⚡" // Lightning for Go (fast)
 	case "python":
-		return "🐍"
+		return "🐍" // Snake for Python
 	case "javascript":
-		return "🟨"
+		return "JS"
 	case "typescript":
-		return "🔷"
+		return "TS"
 	case "java":
 		return "☕"
 	case "c":
-		return "🔧"
+		return "C"
 	case "c++", "cpp":
-		return "⚡"
+		return "C++"
 	case "rust":
 		return "🦀"
 	case "php":
-		return "🐘"
+		return "PHP"
 	case "ruby":
 		return "💎"
 	default:

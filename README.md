@@ -9,6 +9,7 @@ A powerful, interactive Terminal User Interface (TUI) for codebase analysis and 
 ## ✨ Features
 
 ### 🖥️ Interactive Terminal Interface
+
 - **Beautiful TUI** built with [Bubble Tea](https://github.com/charmbracelet/bubbletea)
 - **File tree navigation** with expand/collapse functionality
 - **Multiple view modes** for different types of analysis
@@ -16,34 +17,39 @@ A powerful, interactive Terminal User Interface (TUI) for codebase analysis and 
 - **Keyboard shortcuts** for efficient navigation
 
 ### ⚡ High-Performance Analysis
+
 - **Concurrent processing** using Go's goroutines and worker pools
 - **Multi-language support** with pluggable parser architecture
 - **Smart file filtering** with .gitignore support
 - **Memory-efficient** processing of large codebases
 
 ### 📊 Comprehensive Code Metrics
+
 - **Project-level statistics**: Total files, lines of code, complexity scores
 - **Language breakdown**: Per-language metrics and distribution
 - **Function and class analysis**: Detailed code structure insights
 - **File-level details**: Individual file metrics and analysis
 
 ### 🎯 Currently Supported Languages
+
 - **Go** (.go) - Full support with AST parsing
-- **Python** (.py) - *Coming soon*
-- **JavaScript/TypeScript** - *Planned*
-- **Java** - *Planned*
+- **Python** (.py) - _Coming soon_
+- **JavaScript/TypeScript** - _Planned_
+- **Java** - _Planned_
 
 ## 🚀 Quick Start
 
 ### Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/your-username/codebasereaderv2.git
    cd codebasereaderv2
    ```
 
 2. **Build the application:**
+
    ```bash
    go build -o codebase-analyzer ./cmd/tui
    ```
@@ -65,31 +71,35 @@ Once the TUI is running, you can:
 ## ⌨️ Keyboard Shortcuts
 
 ### Navigation
-| Key | Action |
-|-----|--------|
-| `↑/↓` or `k/j` | Move up/down in file tree |
+
+| Key              | Action                          |
+| ---------------- | ------------------------------- |
+| `↑/↓` or `k/j`   | Move up/down in file tree       |
 | `→/l` or `Enter` | Expand directory or select file |
-| `←/h` | Collapse directory or go back |
-| `Tab` | Switch between views |
-| `Esc` | Return to file tree view |
+| `←/h`            | Collapse directory or go back   |
+| `Tab`            | Switch between views            |
+| `Esc`            | Return to file tree view        |
 
 ### Analysis
-| Key | Action |
-|-----|--------|
-| `a` | Analyze selected directory |
-| `r` | Refresh file tree |
+
+| Key | Action                       |
+| --- | ---------------------------- |
+| `a` | Analyze selected directory   |
+| `r` | Refresh file tree            |
 | `m` | Toggle detailed metrics view |
-| `s` | Toggle summary view |
+| `s` | Toggle summary view          |
 
 ### General
-| Key | Action |
-|-----|--------|
-| `?` | Show/hide help |
+
+| Key             | Action           |
+| --------------- | ---------------- |
+| `?`             | Show/hide help   |
 | `q` or `Ctrl+C` | Quit application |
 
 ## 📈 Analysis Output
 
 ### Overview Mode
+
 ```
 📊 Codebase Analysis Results
 ========================================
@@ -109,6 +119,7 @@ Once the TUI is running, you can:
 ```
 
 ### Detailed Metrics Mode
+
 ```
 📈 Detailed Metrics
 ========================================
@@ -152,10 +163,12 @@ The project follows a modular architecture with clear separation of concerns:
 ## 🛠️ Development
 
 ### Prerequisites
+
 - Go 1.21 or higher
 - Terminal with color support
 
 ### Running Tests
+
 ```bash
 # Run all tests
 go test ./...
@@ -168,6 +181,7 @@ go test ./internal/engine/...
 ```
 
 ### Building from Source
+
 ```bash
 # Build for current platform
 go build -o codebase-analyzer ./cmd/tui
@@ -181,6 +195,7 @@ GOOS=windows GOARCH=amd64 go build -o codebase-analyzer-windows.exe ./cmd/tui
 ## 🗺️ Roadmap
 
 ### ✅ Completed
+
 - [x] Interactive TUI with file tree navigation
 - [x] Go language parser with AST analysis
 - [x] Concurrent analysis engine
@@ -189,11 +204,13 @@ GOOS=windows GOARCH=amd64 go build -o codebase-analyzer-windows.exe ./cmd/tui
 - [x] Comprehensive code metrics
 
 ### 🚧 In Progress
+
 - [ ] Python language parser
 - [ ] AI-powered code summaries
 - [ ] Export functionality (JSON, Mermaid diagrams)
 
 ### 📋 Planned
+
 - [ ] JavaScript/TypeScript support
 - [ ] Java language parser
 - [ ] Command-line interface (headless mode)

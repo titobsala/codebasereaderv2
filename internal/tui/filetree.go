@@ -26,9 +26,9 @@ type FileTreeModel struct {
 }
 
 // NewFileTreeModel creates a new file tree model
-func NewFileTreeModel() FileTreeModel {
+func NewFileTreeModel() *FileTreeModel {
 	cwd, _ := os.Getwd()
-	return FileTreeModel{
+	return &FileTreeModel{
 		items:       []FileTreeItem{},
 		cursor:      0,
 		selected:    make(map[int]bool),
@@ -40,12 +40,12 @@ func NewFileTreeModel() FileTreeModel {
 }
 
 // Init initializes the file tree
-func (m FileTreeModel) Init() tea.Cmd {
+func (m *FileTreeModel) Init() tea.Cmd {
 	return m.loadDirectory(m.rootPath)
 }
 
 // Update handles messages for the file tree
-func (m FileTreeModel) Update(msg tea.Msg) (FileTreeModel, tea.Cmd) {
+func (m *FileTreeModel) Update(msg tea.Msg) (*FileTreeModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -144,7 +144,7 @@ func (m FileTreeModel) Update(msg tea.Msg) (FileTreeModel, tea.Cmd) {
 }
 
 // View renders the file tree
-func (m FileTreeModel) View(width, height int) string {
+func (m *FileTreeModel) View(width, height int) string {
 	m.width = width
 	m.height = height
 

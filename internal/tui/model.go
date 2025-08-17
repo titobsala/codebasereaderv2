@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -29,7 +30,15 @@ func NewMainModel() *MainModel {
 
 	return &MainModel{
 		fileTree:       NewFileTreeModel(),
-		contentView:    NewContentViewModel(),
+		contentView:    &ContentViewModel{
+			content:        "Select a file to view its content",
+			scrollY:        0,
+			maxScroll:      0,
+			showMetrics:    false,
+			showSummary:    false,
+			metricsDisplay: NewMetricsDisplay(),
+			currentMode:    OverviewMode,
+		},
 		statusBar:      NewStatusBarModel(),
 		inputField:     ti,
 		currentView:    FileTreeView,

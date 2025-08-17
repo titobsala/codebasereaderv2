@@ -22,8 +22,8 @@ const (
 
 // MainModel represents the main TUI model
 type MainModel struct {
-	fileTree       FileTreeModel
-	contentView    ContentViewModel
+	fileTree       *FileTreeModel
+	contentView    *ContentViewModel
 	statusBar      StatusBarModel
 	inputField     textinput.Model
 	currentView    ViewType

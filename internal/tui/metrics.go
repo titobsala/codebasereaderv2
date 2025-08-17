@@ -58,10 +58,11 @@ func (m *MetricsDisplay) SetSort(sortBy string) {
 
 // Scroll handles scrolling
 func (m *MetricsDisplay) Scroll(delta int) {
-	if m.maxScroll <= 0 {
+	if m.maxScroll <= 0 || delta == 0 {
 		return // No scrolling needed
 	}
 	
+	oldScroll := m.scrollY
 	newScroll := m.scrollY + delta
 	if newScroll < 0 {
 		newScroll = 0
@@ -69,7 +70,11 @@ func (m *MetricsDisplay) Scroll(delta int) {
 	if newScroll > m.maxScroll {
 		newScroll = m.maxScroll
 	}
-	m.scrollY = newScroll
+	
+	// Only update if position actually changed
+	if newScroll != oldScroll {
+		m.scrollY = newScroll
+	}
 }
 
 // Render renders the metrics display
@@ -666,7 +671,16 @@ func (m *MetricsDisplay) applyScrolling(content string) string {
 	
 	lines := strings.Split(content, "\n")
 	availableHeight := m.height - 4 // Reserve space for controls
-	m.maxScroll = max(0, len(lines)-availableHeight)
+	
+	// Only update maxScroll if it's not set or content changed significantly
+	newMaxScroll := max(0, len(lines)-availableHeight)
+	if m.maxScroll != newMaxScroll {
+		m.maxScroll = newMaxScroll
+		// Ensure scroll position is still valid
+		if m.scrollY > m.maxScroll {
+			m.scrollY = m.maxScroll
+		}
+	}
 	
 	if m.maxScroll == 0 {
 		return content
@@ -674,23 +688,27 @@ func (m *MetricsDisplay) applyScrolling(content string) string {
 	
 	startLine := m.scrollY
 	if startLine >= len(lines) {
-		startLine = max(0, len(lines)-1)
+		startLine = max(0, len(lines)-availableHeight)
 		m.scrollY = startLine
+	}
+	if startLine < 0 {
+		startLine = 0
+		m.scrollY = 0
 	}
 	
 	endLine := min(len(lines), startLine+availableHeight)
 	
-	if startLine >= endLine {
-		return ""
+	if startLine >= endLine || startLine >= len(lines) {
+		return content // Return original content if scroll position is invalid
 	}
 	
 	visibleLines := lines[startLine:endLine]
 	result := strings.Join(visibleLines, "\n")
 	
-	// Add scroll indicator
-	if m.maxScroll > 0 {
+	// Add scroll indicator only if we have scrollable content
+	if m.maxScroll > 0 && len(lines) > availableHeight {
 		scrollInfo := fmt.Sprintf("\n\n📊 Line %d-%d of %d (↑↓ to scroll)", 
-			startLine+1, endLine, len(lines))
+			startLine+1, min(endLine, len(lines)), len(lines))
 		result += lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#626262")).
 			Italic(true).
