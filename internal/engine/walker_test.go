@@ -9,8 +9,6 @@ import (
 	"github.com/tito-sala/codebasereaderv2/internal/parser"
 )
 
-
-
 func setupTestEnvironment(t *testing.T) (string, *FileWalker, func()) {
 	// Create temporary directory
 	tempDir, err := os.MkdirTemp("", "walker_test")
@@ -20,26 +18,26 @@ func setupTestEnvironment(t *testing.T) (string, *FileWalker, func()) {
 
 	// Create test file structure
 	testFiles := map[string]string{
-		"main.go":                    "package main\n\nfunc main() {}\n",
-		"src/utils.go":              "package src\n\nfunc Utils() {}\n",
-		"src/parser.py":             "def parse():\n    pass\n",
-		"node_modules/lib.js":       "console.log('test');\n",
-		".git/config":               "[core]\n",
-		"vendor/dep.go":             "package vendor\n",
-		"__pycache__/cache.pyc":     "compiled python",
-		"docs/README.md":            "# Documentation\n",
-		"test/test_file.go":         "package test\n",
-		"large_file.go":             strings.Repeat("// Large file\n", 1000),
+		"main.go":               "package main\n\nfunc main() {}\n",
+		"src/utils.go":          "package src\n\nfunc Utils() {}\n",
+		"src/parser.py":         "def parse():\n    pass\n",
+		"node_modules/lib.js":   "console.log('test');\n",
+		".git/config":           "[core]\n",
+		"vendor/dep.go":         "package vendor\n",
+		"__pycache__/cache.pyc": "compiled python",
+		"docs/README.md":        "# Documentation\n",
+		"test/test_file.go":     "package test\n",
+		"large_file.go":         strings.Repeat("// Large file\n", 1000),
 	}
 
 	for filePath, content := range testFiles {
 		fullPath := filepath.Join(tempDir, filePath)
 		dir := filepath.Dir(fullPath)
-		
+
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatalf("Failed to create directory %s: %v", dir, err)
 		}
-		
+
 		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
 			t.Fatalf("Failed to create file %s: %v", fullPath, err)
 		}
@@ -70,7 +68,7 @@ dist/
 	registry := parser.NewParserRegistry()
 	goParser := &MockParser{name: "Go", extensions: []string{"go"}}
 	pyParser := &MockParser{name: "Python", extensions: []string{"py"}}
-	
+
 	registry.RegisterParser(goParser)
 	registry.RegisterParser(pyParser)
 
@@ -140,7 +138,7 @@ func TestFileWalker_Walk(t *testing.T) {
 		}
 
 		if result.Parser.GetLanguageName() != expectedLanguage {
-			t.Errorf("Wrong parser for file %s: expected %s, got %s", 
+			t.Errorf("Wrong parser for file %s: expected %s, got %s",
 				relPath, expectedLanguage, result.Parser.GetLanguageName())
 		}
 	}
@@ -175,8 +173,6 @@ func TestFileWalker_GitignoreRules(t *testing.T) {
 	if len(walker.gitignoreRules) == 0 {
 		t.Error("No gitignore rules loaded")
 	}
-	
-
 
 	// Test specific exclusions
 	testCases := []struct {
@@ -185,8 +181,8 @@ func TestFileWalker_GitignoreRules(t *testing.T) {
 	}{
 		{"__pycache__/cache.pyc", true},
 		{"node_modules/lib.js", true},
-		{"build/output.bin", true},  // This should match /build/ rule
-		{"dist/app.js", true},       // This should match dist/ rule
+		{"build/output.bin", true}, // This should match /build/ rule
+		{"dist/app.js", true},      // This should match dist/ rule
 		{"src/main.go", false},
 		{"test.py", false},
 	}
@@ -221,7 +217,7 @@ func TestFileWalker_PatternMatching(t *testing.T) {
 	for _, tc := range testCases {
 		matches := walker.matchesPattern(tc.pattern, tc.path)
 		if matches != tc.matches {
-			t.Errorf("Pattern '%s' with path '%s': expected %v, got %v", 
+			t.Errorf("Pattern '%s' with path '%s': expected %v, got %v",
 				tc.pattern, tc.path, tc.matches, matches)
 		}
 	}
@@ -248,7 +244,7 @@ func TestFileWalker_WildcardMatching(t *testing.T) {
 	for _, tc := range testCases {
 		matches := walker.matchesWildcard(tc.pattern, tc.str)
 		if matches != tc.matches {
-			t.Errorf("Wildcard pattern '%s' with string '%s': expected %v, got %v", 
+			t.Errorf("Wildcard pattern '%s' with string '%s': expected %v, got %v",
 				tc.pattern, tc.str, tc.matches, matches)
 		}
 	}
@@ -381,7 +377,7 @@ func TestFileWalker_FileSizeLimit(t *testing.T) {
 	registry.RegisterParser(goParser)
 
 	config := DefaultConfig()
-	config.MaxFileSize = 100 // Very small limit
+	config.MaxFileSize = 100            // Very small limit
 	config.ExcludePatterns = []string{} // Clear default excludes
 
 	walker := NewFileWalker(registry, config)
@@ -392,7 +388,7 @@ func TestFileWalker_FileSizeLimit(t *testing.T) {
 	}
 
 	foundLargeFile := false
-	
+
 	for result := range resultChan {
 		if result.Error != nil {
 			continue

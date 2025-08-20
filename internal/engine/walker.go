@@ -52,7 +52,7 @@ func (fw *FileWalker) Walk(rootPath string) (<-chan WalkResult, error) {
 
 	go func() {
 		defer close(resultChan)
-		
+
 		err := filepath.WalkDir(rootPath, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				resultChan <- WalkResult{
@@ -92,7 +92,7 @@ func (fw *FileWalker) Walk(rootPath string) (<-chan WalkResult, error) {
 					}
 					return nil
 				}
-				
+
 				if info.Size() > fw.config.MaxFileSize {
 					return nil // Skip files that are too large
 				}
@@ -122,7 +122,7 @@ func (fw *FileWalker) loadGitignoreRules(rootPath string) error {
 	defer fw.mutex.Unlock()
 
 	gitignorePath := filepath.Join(rootPath, ".gitignore")
-	
+
 	file, err := os.Open(gitignorePath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -134,15 +134,15 @@ func (fw *FileWalker) loadGitignoreRules(rootPath string) error {
 
 	fw.gitignoreRules = make([]string, 0)
 	scanner := bufio.NewScanner(file)
-	
+
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		
+
 		// Skip empty lines and comments
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		
+
 		fw.gitignoreRules = append(fw.gitignoreRules, line)
 	}
 
@@ -172,7 +172,7 @@ func (fw *FileWalker) shouldExcludeDirectory(dirPath, rootPath string) bool {
 	fw.mutex.RLock()
 	gitignoreRules := fw.gitignoreRules
 	fw.mutex.RUnlock()
-	
+
 	for _, rule := range gitignoreRules {
 		if fw.matchesGitignoreRule(rule, relPath, true) {
 			return true
@@ -219,7 +219,7 @@ func (fw *FileWalker) shouldExcludeFile(filePath, rootPath string) bool {
 	fw.mutex.RLock()
 	gitignoreRules := fw.gitignoreRules
 	fw.mutex.RUnlock()
-	
+
 	for _, rule := range gitignoreRules {
 		if fw.matchesGitignoreRule(rule, relPath, false) {
 			return true
@@ -310,7 +310,7 @@ func (fw *FileWalker) matchesGitignoreRule(rule, path string, isDir bool) bool {
 	}
 
 	originalRule := rule
-	
+
 	// Handle directory-only rules (ending with /)
 	dirOnly := strings.HasSuffix(rule, "/")
 	if dirOnly {
@@ -349,7 +349,7 @@ func (fw *FileWalker) matchesGitignoreRule(rule, path string, isDir bool) bool {
 
 	// Handle patterns that should match anywhere in the path
 	pathParts := strings.Split(path, "/")
-	
+
 	// Check if rule matches any part of the path
 	for _, part := range pathParts {
 		if fw.matchesPattern(rule, part) {
@@ -387,11 +387,11 @@ func (fw *FileWalker) GetStats(rootPath string) (*WalkStats, error) {
 	}
 
 	stats := &WalkStats{
-		TotalFiles:      0,
-		SupportedFiles:  0,
-		ExcludedFiles:   0,
+		TotalFiles:         0,
+		SupportedFiles:     0,
+		ExcludedFiles:      0,
 		DirectoriesSkipped: 0,
-		FilesByExtension: make(map[string]int),
+		FilesByExtension:   make(map[string]int),
 	}
 
 	err := filepath.WalkDir(rootPath, func(path string, d fs.DirEntry, err error) error {

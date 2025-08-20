@@ -1,4 +1,4 @@
-package core
+package app
 
 import (
 	"fmt"
@@ -6,14 +6,14 @@ import (
 	"github.com/tito-sala/codebasereaderv2/internal/ai"
 	"github.com/tito-sala/codebasereaderv2/internal/engine"
 	"github.com/tito-sala/codebasereaderv2/internal/parser"
-	"github.com/tito-sala/codebasereaderv2/internal/tui"
+	tuicore "github.com/tito-sala/codebasereaderv2/internal/tui/core"
 )
 
 // Application represents the main application structure
 type Application struct {
 	engine    *engine.Engine
 	aiClient  ai.AIClient
-	tuiConfig *tui.TUIConfig
+	tuiConfig *tuicore.TUIConfig
 }
 
 // NewApplication creates a new application instance
@@ -24,7 +24,7 @@ func NewApplication(config *engine.Config) *Application {
 
 	app := &Application{
 		engine:    engine.NewEngine(config),
-		tuiConfig: tui.DefaultTUIConfig(),
+		tuiConfig: tuicore.DefaultTUIConfig(),
 	}
 
 	return app
@@ -51,7 +51,7 @@ func (app *Application) GetAIClient() ai.AIClient {
 }
 
 // GetTUIConfig returns the TUI configuration
-func (app *Application) GetTUIConfig() *tui.TUIConfig {
+func (app *Application) GetTUIConfig() *tuicore.TUIConfig {
 	return app.tuiConfig
 }
 

@@ -19,14 +19,14 @@ type LanguageStats struct {
 
 // ProjectAnalysis contains the complete analysis results for a project
 type ProjectAnalysis struct {
-	RootPath         string                    `json:"root_path"`
-	TotalFiles       int                       `json:"total_files"`
-	TotalLines       int                       `json:"total_lines"`
-	Languages        map[string]LanguageStats  `json:"languages"`
-	FileResults      []*parser.AnalysisResult  `json:"file_results"`
-	Summary          string                    `json:"summary,omitempty"`
-	GeneratedAt      time.Time                 `json:"generated_at"`
-	AnalysisDuration time.Duration             `json:"analysis_duration"`
+	RootPath         string                   `json:"root_path"`
+	TotalFiles       int                      `json:"total_files"`
+	TotalLines       int                      `json:"total_lines"`
+	Languages        map[string]LanguageStats `json:"languages"`
+	FileResults      []*parser.AnalysisResult `json:"file_results"`
+	Summary          string                   `json:"summary,omitempty"`
+	GeneratedAt      time.Time                `json:"generated_at"`
+	AnalysisDuration time.Duration            `json:"analysis_duration"`
 }
 
 // AnalysisJob represents a single file analysis job

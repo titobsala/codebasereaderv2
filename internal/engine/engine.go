@@ -65,17 +65,17 @@ func (e *Engine) AnalyzeDirectory(rootPath string) (*ProjectAnalysis, error) {
 func (e *Engine) AnalyzeDirectoryWithProgress(rootPath string, progressCallback func(current, total int, filePath string)) (*ProjectAnalysis, error) {
 	// Create file walker
 	walker := NewFileWalker(e.parserRegistry, e.config)
-	
+
 	// Start worker pool
 	e.workerPool.Start()
 	defer e.workerPool.Stop()
-	
+
 	// Walk directory to find files
 	walkResultChan, err := walker.Walk(rootPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to walk directory: %w", err)
 	}
-	
+
 	// Collect all files first to know total count
 	var walkResults []WalkResult
 	for result := range walkResultChan {
@@ -86,18 +86,18 @@ func (e *Engine) AnalyzeDirectoryWithProgress(rootPath string, progressCallback 
 		}
 		walkResults = append(walkResults, result)
 	}
-	
+
 	totalFiles := len(walkResults)
 	if totalFiles == 0 {
 		return &ProjectAnalysis{
-			RootPath:     rootPath,
-			TotalFiles:   0,
-			TotalLines:   0,
-			Languages:    make(map[string]LanguageStats),
-			FileResults:  []*parser.AnalysisResult{},
+			RootPath:    rootPath,
+			TotalFiles:  0,
+			TotalLines:  0,
+			Languages:   make(map[string]LanguageStats),
+			FileResults: []*parser.AnalysisResult{},
 		}, nil
 	}
-	
+
 	// Submit jobs to worker pool
 	for _, walkResult := range walkResults {
 		content, err := e.readFileContent(walkResult.FilePath)
@@ -105,31 +105,31 @@ func (e *Engine) AnalyzeDirectoryWithProgress(rootPath string, progressCallback 
 			fmt.Printf("Warning: failed to read file %s: %v\n", walkResult.FilePath, err)
 			continue
 		}
-		
+
 		job := AnalysisJob{
 			FilePath:          walkResult.FilePath,
 			Content:           content,
 			Parser:            walkResult.Parser,
 			MetricsCalculator: e.metricsCalculator,
 		}
-		
+
 		if err := e.workerPool.SubmitJob(job); err != nil {
 			return nil, fmt.Errorf("failed to submit job for %s: %w", walkResult.FilePath, err)
 		}
 	}
-	
+
 	// Collect results
 	var results []*parser.AnalysisResult
 	var errors []error
 	processedCount := 0
-	
+
 	resultChan := e.workerPool.GetResultChannel()
-	
+
 	for processedCount < totalFiles {
 		select {
 		case jobResult := <-resultChan:
 			processedCount++
-			
+
 			if progressCallback != nil {
 				filePath := ""
 				if jobResult.Result != nil {
@@ -137,21 +137,21 @@ func (e *Engine) AnalyzeDirectoryWithProgress(rootPath string, progressCallback 
 				}
 				progressCallback(processedCount, totalFiles, filePath)
 			}
-			
+
 			if jobResult.Error != nil {
 				errors = append(errors, jobResult.Error)
 				continue
 			}
-			
+
 			if jobResult.Result != nil {
 				results = append(results, jobResult.Result)
 			}
 		}
 	}
-	
+
 	// Aggregate results into project analysis
 	analysis := e.aggregateResults(rootPath, results)
-	
+
 	// Report any errors that occurred
 	if len(errors) > 0 {
 		fmt.Printf("Analysis completed with %d errors\n", len(errors))
@@ -159,7 +159,7 @@ func (e *Engine) AnalyzeDirectoryWithProgress(rootPath string, progressCallback 
 			fmt.Printf("  Error: %v\n", err)
 		}
 	}
-	
+
 	return analysis, nil
 }
 
@@ -170,22 +170,22 @@ func (e *Engine) AnalyzeFile(filePath string) (*parser.AnalysisResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("no parser available for file %s: %w", filePath, err)
 	}
-	
+
 	// Read file content
 	content, err := e.readFileContent(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
 	}
-	
+
 	// Parse file
 	result, err := parser.Parse(filePath, content)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse file %s: %w", filePath, err)
 	}
-	
+
 	// Calculate enhanced metrics
 	e.metricsCalculator.CalculateFileMetrics(result, content)
-	
+
 	return result, nil
 }
 
@@ -255,7 +255,7 @@ func (wp *WorkerPool) Stop() {
 	wp.stopOnce.Do(func() {
 		close(wp.stopChan)
 	})
-	
+
 	wp.wg.Wait()
 	wp.running = false
 }
@@ -320,12 +320,12 @@ func (e *Engine) readFileContent(filePath string) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		
+
 		if info.Size() > e.config.MaxFileSize {
 			return nil, fmt.Errorf("file %s exceeds size limit (%d bytes)", filePath, e.config.MaxFileSize)
 		}
 	}
-	
+
 	return os.ReadFile(filePath)
 }
 
@@ -339,26 +339,26 @@ func (e *Engine) aggregateResults(rootPath string, results []*parser.AnalysisRes
 		FileResults: results,
 		GeneratedAt: time.Now(),
 	}
-	
+
 	// Aggregate basic statistics
 	for _, result := range results {
 		analysis.TotalLines += result.LineCount
-		
+
 		// Update language statistics
 		langStats, exists := analysis.Languages[result.Language]
 		if !exists {
 			langStats = LanguageStats{}
 		}
-		
+
 		langStats.FileCount++
 		langStats.LineCount += result.LineCount
 		langStats.FunctionCount += len(result.Functions)
 		langStats.ClassCount += len(result.Classes)
 		langStats.Complexity += result.Complexity
-		
+
 		analysis.Languages[result.Language] = langStats
 	}
-	
+
 	return analysis
 }
 
@@ -374,15 +374,15 @@ func (e *Engine) AnalyzeDirectoryWithEnhancedMetricsAndProgress(rootPath string,
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Use metrics aggregator to calculate comprehensive project metrics
 	enhancedAnalysis := e.metricsAggregator.AggregateProjectMetrics(basicAnalysis.FileResults, rootPath)
-	
+
 	// Copy basic fields
 	enhancedAnalysis.TotalLines = basicAnalysis.TotalLines
 	enhancedAnalysis.GeneratedAt = basicAnalysis.GeneratedAt
 	enhancedAnalysis.Summary = basicAnalysis.Summary
-	
+
 	// Convert basic language stats to enhanced language stats
 	enhancedLanguages := make(map[string]metrics.LanguageStats)
 	for lang, basicStats := range basicAnalysis.Languages {
@@ -395,7 +395,7 @@ func (e *Engine) AnalyzeDirectoryWithEnhancedMetricsAndProgress(rootPath string,
 		}
 	}
 	enhancedAnalysis.Languages = enhancedLanguages
-	
+
 	return enhancedAnalysis, nil
 }
 

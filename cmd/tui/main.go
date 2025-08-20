@@ -5,12 +5,12 @@ import (
 	"log"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/tito-sala/codebasereaderv2/internal/tui"
+	"github.com/tito-sala/codebasereaderv2/internal/tui/core"
 )
 
 func main() {
 	// Create the main TUI model
-	model := tui.NewMainModel()
+	model := core.NewMainModel()
 
 	// Create the Bubble Tea program
 	p := tea.NewProgram(model, tea.WithAltScreen())

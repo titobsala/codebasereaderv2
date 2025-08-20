@@ -311,12 +311,12 @@ def main():
 func TestPythonParser_GetSupportedExtensions(t *testing.T) {
 	parser := NewPythonParser()
 	extensions := parser.GetSupportedExtensions()
-	
+
 	expected := []string{".py", ".pyw"}
 	if len(extensions) != len(expected) {
 		t.Fatalf("Expected %d extensions, got %d", len(expected), len(extensions))
 	}
-	
+
 	for i, exp := range expected {
 		if extensions[i] != exp {
 			t.Errorf("Expected extension '%s', got '%s'", exp, extensions[i])
@@ -327,7 +327,7 @@ func TestPythonParser_GetSupportedExtensions(t *testing.T) {
 func TestPythonParser_GetLanguageName(t *testing.T) {
 	parser := NewPythonParser()
 	name := parser.GetLanguageName()
-	
+
 	if name != "Python" {
 		t.Errorf("Expected language name 'Python', got '%s'", name)
 	}
@@ -482,30 +482,30 @@ func TestPythonParser_Parse_ComplexExpressions(t *testing.T) {
 
 func TestPythonParser_Parse_ErrorHandling(t *testing.T) {
 	parser := NewPythonParser()
-	
+
 	// Test with empty content
 	result, err := parser.Parse("empty.py", []byte(""))
 	if err != nil {
 		t.Fatalf("Parse failed on empty content: %v", err)
 	}
-	
+
 	if result.LineCount != 1 {
 		t.Errorf("Expected line count 1 for empty content, got %d", result.LineCount)
 	}
-	
+
 	// Test with only comments
 	content := `# This is a comment
 # Another comment`
-	
+
 	result, err = parser.Parse("comments.py", []byte(content))
 	if err != nil {
 		t.Fatalf("Parse failed on comments: %v", err)
 	}
-	
+
 	if len(result.Functions) != 0 {
 		t.Errorf("Expected 0 functions in comment-only file, got %d", len(result.Functions))
 	}
-	
+
 	if len(result.Classes) != 0 {
 		t.Errorf("Expected 0 classes in comment-only file, got %d", len(result.Classes))
 	}

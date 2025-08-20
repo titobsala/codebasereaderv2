@@ -7,8 +7,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// min returns the minimum of two integers
-func min(a, b int) int {
+// Min returns the minimum of two integers
+func Min(a, b int) int {
 	if a < b {
 		return a
 	}
@@ -23,8 +23,8 @@ func max(a, b int) int {
 	return b
 }
 
-// formatFileSize formats file size in human readable format
-func formatFileSize(size int64) string {
+// FormatFileSize formats file size in human readable format
+func FormatFileSize(size int64) string {
 	const unit = 1024
 	if size < unit {
 		return fmt.Sprintf("%d B", size)
@@ -37,8 +37,8 @@ func formatFileSize(size int64) string {
 	return fmt.Sprintf("%.1f %cB", float64(size)/float64(div), "KMGTPE"[exp])
 }
 
-// formatNumber formats numbers with thousand separators
-func formatNumber(n int) string {
+// FormatNumber formats numbers with thousand separators
+func FormatNumber(n int) string {
 	if n < 1000 {
 		return fmt.Sprintf("%d", n)
 	}
@@ -48,8 +48,8 @@ func formatNumber(n int) string {
 	return fmt.Sprintf("%.1fM", float64(n)/1000000)
 }
 
-// getLangIcon returns an icon for the programming language
-func getLangIcon(lang string) string {
+// GetLangIcon returns an icon for the programming language
+func GetLangIcon(lang string) string {
 	switch strings.ToLower(lang) {
 	case "go":
 		return "⚡" // Lightning for Go (fast)
@@ -76,8 +76,8 @@ func getLangIcon(lang string) string {
 	}
 }
 
-// getGradeStyle returns the appropriate pre-cached style for a quality grade
-func getGradeStyle(grade string) lipgloss.Style {
+// GetGradeStyle returns the appropriate pre-cached style for a quality grade
+func GetGradeStyle(grade string) lipgloss.Style {
 	switch grade {
 	case "A":
 		return gradeStyleA

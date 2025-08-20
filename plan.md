@@ -1,9 +1,3 @@
-Of course. This is an excellent project, and rewriting it in Go with a more extensible design is a great professional development exercise.
-
-Here is a Project Design Document (PDD) that outlines the foundation for building your new, multi-language `CodebaseReader` using Go and the Charm libraries.
-
----
-
 # Project Design Document: CodebaseReader v2
 
 ## 1\. Introduction

@@ -49,15 +49,15 @@ func (r *ParserRegistry) RegisterParser(parser Parser) error {
 // GetParser returns the appropriate parser for a given file path
 func (r *ParserRegistry) GetParser(filePath string) (Parser, error) {
 	ext := strings.ToLower(filepath.Ext(filePath))
-	
+
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	parser, exists := r.parsers[ext]
 	if !exists {
 		return nil, fmt.Errorf("no parser registered for extension: %s", ext)
 	}
-	
+
 	return parser, nil
 }
 
@@ -65,22 +65,22 @@ func (r *ParserRegistry) GetParser(filePath string) (Parser, error) {
 func (r *ParserRegistry) GetSupportedExtensions() []string {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	extensions := make([]string, 0, len(r.parsers))
 	for ext := range r.parsers {
 		extensions = append(extensions, ext)
 	}
-	
+
 	return extensions
 }
 
 // IsSupported checks if a file extension is supported
 func (r *ParserRegistry) IsSupported(filePath string) bool {
 	ext := strings.ToLower(filepath.Ext(filePath))
-	
+
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	_, exists := r.parsers[ext]
 	return exists
 }
@@ -89,10 +89,10 @@ func (r *ParserRegistry) IsSupported(filePath string) bool {
 func (r *ParserRegistry) GetRegisteredParsers() map[string]string {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	result := make(map[string]string)
 	processed := make(map[string]bool)
-	
+
 	for _, parser := range r.parsers {
 		langName := parser.GetLanguageName()
 		if !processed[langName] {
@@ -106,6 +106,6 @@ func (r *ParserRegistry) GetRegisteredParsers() map[string]string {
 			processed[langName] = true
 		}
 	}
-	
+
 	return result
 }

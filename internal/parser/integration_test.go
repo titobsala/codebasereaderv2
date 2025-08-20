@@ -7,7 +7,7 @@ import (
 
 func TestGoParser_IntegrationWithRealFile(t *testing.T) {
 	parser := NewGoParser()
-	
+
 	// Test with the actual config.go file
 	content, err := os.ReadFile("../config/config.go")
 	if err != nil {
@@ -44,13 +44,13 @@ func TestGoParser_IntegrationWithRealFile(t *testing.T) {
 		}
 	}
 
-	t.Logf("Successfully parsed config.go: %d lines, %d functions, %d imports", 
+	t.Logf("Successfully parsed config.go: %d lines, %d functions, %d imports",
 		result.LineCount, len(result.Functions), len(result.Imports))
 }
 
 func TestPythonParser_IntegrationWithSampleCode(t *testing.T) {
 	parser := NewPythonParser()
-	
+
 	// Test with sample Python code
 	content := `#!/usr/bin/env python3
 """Sample Python module for testing."""
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 		t.Error("Expected to find imports")
 	}
 
-	t.Logf("Successfully parsed Python code: %d lines, %d functions, %d classes, %d imports", 
+	t.Logf("Successfully parsed Python code: %d lines, %d functions, %d classes, %d imports",
 		result.LineCount, len(result.Functions), len(result.Classes), len(result.Imports))
 }
 

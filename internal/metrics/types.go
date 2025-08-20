@@ -17,13 +17,13 @@ type ProjectMetrics struct {
 
 // DirectoryStats contains statistics for a specific directory
 type DirectoryStats struct {
-	Path             string                   `json:"path"`
-	FileCount        int                      `json:"file_count"`
-	LineCount        int                      `json:"line_count"`
-	Languages        map[string]LanguageStats `json:"languages"`
-	Complexity       int                      `json:"complexity"`
-	MaintainabilityIndex float64              `json:"maintainability_index"`
-	SubDirectories   []string                 `json:"sub_directories"`
+	Path                 string                   `json:"path"`
+	FileCount            int                      `json:"file_count"`
+	LineCount            int                      `json:"line_count"`
+	Languages            map[string]LanguageStats `json:"languages"`
+	Complexity           int                      `json:"complexity"`
+	MaintainabilityIndex float64                  `json:"maintainability_index"`
+	SubDirectories       []string                 `json:"sub_directories"`
 }
 
 // LanguageStats contains statistics for a specific programming language
@@ -49,6 +49,7 @@ type LanguageStats struct {
 type DependencyGraph struct {
 	InternalDependencies map[string][]string `json:"internal_dependencies"`
 	ExternalDependencies map[string][]string `json:"external_dependencies"`
+	StandardDependencies map[string][]string `json:"standard_dependencies"`
 	CircularDependencies [][]string          `json:"circular_dependencies"`
 	DependencyDepth      int                 `json:"dependency_depth"`
 	UnusedDependencies   []string            `json:"unused_dependencies"`
@@ -56,28 +57,28 @@ type DependencyGraph struct {
 
 // QualityScore represents overall code quality metrics
 type QualityScore struct {
-	Overall          float64 `json:"overall"`
-	Maintainability  float64 `json:"maintainability"`
-	Complexity       float64 `json:"complexity"`
-	Documentation    float64 `json:"documentation"`
-	TestCoverage     float64 `json:"test_coverage"`
-	CodeDuplication  float64 `json:"code_duplication"`
-	Grade            string  `json:"grade"` // A, B, C, D, F
+	Overall         float64 `json:"overall"`
+	Maintainability float64 `json:"maintainability"`
+	Complexity      float64 `json:"complexity"`
+	Documentation   float64 `json:"documentation"`
+	TestCoverage    float64 `json:"test_coverage"`
+	CodeDuplication float64 `json:"code_duplication"`
+	Grade           string  `json:"grade"` // A, B, C, D, F
 }
 
 // EnhancedProjectAnalysis contains the complete analysis results for a project with enhanced metrics
 type EnhancedProjectAnalysis struct {
-	RootPath         string                    `json:"root_path"`
-	TotalFiles       int                       `json:"total_files"`
-	TotalLines       int                       `json:"total_lines"`
-	Languages        map[string]LanguageStats  `json:"languages"`
-	FileResults      interface{}               `json:"file_results"` // Will be []*parser.AnalysisResult
-	Summary          string                    `json:"summary,omitempty"`
-	GeneratedAt      time.Time                 `json:"generated_at"`
-	AnalysisDuration time.Duration             `json:"analysis_duration"`
+	RootPath         string                   `json:"root_path"`
+	TotalFiles       int                      `json:"total_files"`
+	TotalLines       int                      `json:"total_lines"`
+	Languages        map[string]LanguageStats `json:"languages"`
+	FileResults      interface{}              `json:"file_results"` // Will be []*parser.AnalysisResult
+	Summary          string                   `json:"summary,omitempty"`
+	GeneratedAt      time.Time                `json:"generated_at"`
+	AnalysisDuration time.Duration            `json:"analysis_duration"`
 	// Enhanced metrics
-	ProjectMetrics   ProjectMetrics            `json:"project_metrics"`
-	DirectoryStats   map[string]DirectoryStats `json:"directory_stats"`
-	DependencyGraph  DependencyGraph           `json:"dependency_graph"`
-	QualityScore     QualityScore              `json:"quality_score"`
+	ProjectMetrics  ProjectMetrics            `json:"project_metrics"`
+	DirectoryStats  map[string]DirectoryStats `json:"directory_stats"`
+	DependencyGraph DependencyGraph           `json:"dependency_graph"`
+	QualityScore    QualityScore              `json:"quality_score"`
 }

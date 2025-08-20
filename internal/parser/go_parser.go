@@ -59,11 +59,17 @@ func (g *GoParser) Parse(filePath string, content []byte) (*AnalysisResult, erro
 	// Count lines
 	result.LineCount = strings.Count(string(content), "\n") + 1
 
-	// Extract imports
+	// Extract and categorize imports
 	for _, imp := range node.Imports {
 		importPath := strings.Trim(imp.Path.Value, `"`)
 		result.Imports = append(result.Imports, importPath)
+
+		// Create dependency with proper categorization
+		dependency := g.categorizeImport(importPath, filePath)
+		result.Dependencies = append(result.Dependencies, dependency)
 	}
+
+	result.ImportCount = len(result.Imports)
 
 	// Walk the AST to extract information
 	ast.Inspect(node, func(n ast.Node) bool {
@@ -126,7 +132,7 @@ func (g *GoParser) extractFunctionInfo(fset *token.FileSet, funcDecl *ast.FuncDe
 			}
 		}
 	}
-	
+
 	funcInfo.ParameterCount = len(funcInfo.Parameters)
 
 	// Extract return type
@@ -176,7 +182,7 @@ func (g *GoParser) extractStructInfo(fset *token.FileSet, typeSpec *ast.TypeSpec
 			}
 		}
 	}
-	
+
 	classInfo.FieldCount = len(classInfo.Fields)
 	return classInfo
 }
@@ -319,4 +325,127 @@ func (g *GoParser) isPublicFunction(name string) bool {
 // isPublicType determines if a type is public (exported) in Go
 func (g *GoParser) isPublicType(name string) bool {
 	return len(name) > 0 && name[0] >= 'A' && name[0] <= 'Z'
+}
+
+// categorizeImport categorizes an import path into internal, external, or standard library
+func (g *GoParser) categorizeImport(importPath, filePath string) Dependency {
+	dependency := Dependency{
+		Name:        importPath,
+		UsageCount:  1, // For now, assume each import is used once
+		IsDirectDep: true,
+		FilePath:    filePath,
+	}
+
+	// Categorize the import
+	if g.isStandardLibrary(importPath) {
+		dependency.Type = "standard"
+	} else if g.isInternalImport(importPath, filePath) {
+		dependency.Type = "internal"
+	} else {
+		dependency.Type = "external"
+		// Try to extract version from module path if available
+		dependency.Version = g.extractVersion(importPath)
+	}
+
+	return dependency
+}
+
+// isStandardLibrary checks if an import is from Go's standard library
+func (g *GoParser) isStandardLibrary(importPath string) bool {
+	// Go standard library packages don't contain dots or slashes in their root
+	// and are well-known packages
+	standardPackages := map[string]bool{
+		// Core packages
+		"fmt": true, "os": true, "io": true, "strings": true, "strconv": true,
+		"time": true, "context": true, "errors": true, "sync": true, "sort": true,
+		"encoding/json": true, "encoding/xml": true, "encoding/base64": true,
+		"net/http": true, "net/url": true, "net": true,
+		"path": true, "path/filepath": true,
+		"regexp": true, "reflect": true, "runtime": true,
+		"bufio": true, "bytes": true, "compress/gzip": true,
+		"crypto/md5": true, "crypto/sha1": true, "crypto/sha256": true, "crypto/rand": true,
+		"database/sql": true, "html/template": true, "text/template": true,
+		"log": true, "math": true, "math/rand": true,
+		// Testing
+		"testing": true, "testing/quick": true,
+		// AST and parsing
+		"go/ast": true, "go/parser": true, "go/scanner": true, "go/token": true,
+		"go/format": true, "go/build": true,
+	}
+
+	// Check direct match
+	if standardPackages[importPath] {
+		return true
+	}
+
+	// Check if it's a sub-package of a known standard package
+	// Standard library packages don't contain domain names (no dots before first slash)
+	if !strings.Contains(importPath, ".") && !strings.Contains(importPath, "/") {
+		return true
+	}
+
+	// Check common standard library prefixes
+	standardPrefixes := []string{
+		"archive/", "bufio", "builtin", "bytes", "compress/", "container/",
+		"context", "crypto/", "database/", "debug/", "embed", "encoding/",
+		"errors", "expvar", "flag", "fmt", "go/", "hash/", "html/", "image/",
+		"index/", "io/", "log/", "math/", "mime/", "net/", "os/", "path/",
+		"plugin", "reflect", "regexp/", "runtime/", "sort", "strconv",
+		"strings", "sync/", "syscall", "testing/", "text/", "time",
+		"unicode/", "unsafe",
+	}
+
+	for _, prefix := range standardPrefixes {
+		if strings.HasPrefix(importPath, prefix) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// isInternalImport checks if an import is internal to the current project
+func (g *GoParser) isInternalImport(importPath, filePath string) bool {
+	// Internal imports typically:
+	// 1. Start with a relative path (./  ../)
+	// 2. Share the same module prefix as the current file
+
+	if strings.HasPrefix(importPath, "./") || strings.HasPrefix(importPath, "../") {
+		return true
+	}
+
+	// Try to determine if it's from the same module
+	// This is a heuristic - we look for common patterns in the import path
+	// vs the file path structure
+
+	// If the import path contains the same domain/organization as the project,
+	// it's likely internal. For now, we'll use a simple heuristic:
+	// if it contains known patterns like github.com/org/project or
+	// matches the current project structure
+
+	// Extract potential module name from file path
+	// This is simplified - in a full implementation, we'd parse go.mod
+	if strings.Contains(importPath, "/internal/") {
+		return true
+	}
+
+	// For this project specifically, anything starting with our module path
+	if strings.HasPrefix(importPath, "github.com/tito-sala/codebasereaderv2") {
+		return true
+	}
+
+	// Simple heuristic: if import doesn't contain a domain, might be internal
+	if !strings.Contains(importPath, ".") && strings.Contains(importPath, "/") {
+		return true
+	}
+
+	return false
+}
+
+// extractVersion attempts to extract version information from import path
+func (g *GoParser) extractVersion(importPath string) string {
+	// For now, we don't have access to go.mod parsing
+	// In a full implementation, we'd parse go.mod or use go list
+	// This is a placeholder for future enhancement
+	return ""
 }

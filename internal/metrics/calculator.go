@@ -26,19 +26,19 @@ func NewCalculator() *Calculator {
 // CalculateFileMetrics calculates comprehensive metrics for a single file
 func (c *Calculator) CalculateFileMetrics(result *parser.AnalysisResult, content []byte) {
 	lines := strings.Split(string(content), "\n")
-	
+
 	// Calculate line-based metrics
 	c.calculateLineMetrics(result, lines)
-	
+
 	// Calculate complexity metrics
 	c.calculateComplexityMetrics(result)
-	
+
 	// Calculate maintainability index
 	c.calculateMaintainabilityIndex(result)
-	
+
 	// Calculate technical debt
 	c.calculateTechnicalDebt(result)
-	
+
 	// Calculate dependency metrics
 	c.calculateDependencyMetrics(result)
 }
@@ -48,19 +48,19 @@ func (c *Calculator) calculateLineMetrics(result *parser.AnalysisResult, lines [
 	var codeLines, commentLines, blankLines int
 	var totalLineLength int
 	var maxLineLength int
-	
+
 	commentPattern := c.commentPatterns[strings.ToLower(result.Language)]
-	
+
 	for _, line := range lines {
 		lineLength := len(line)
 		totalLineLength += lineLength
-		
+
 		if lineLength > maxLineLength {
 			maxLineLength = lineLength
 		}
-		
+
 		trimmedLine := strings.TrimSpace(line)
-		
+
 		if trimmedLine == "" {
 			blankLines++
 		} else if commentPattern != nil && commentPattern.MatchString(trimmedLine) {
@@ -69,12 +69,12 @@ func (c *Calculator) calculateLineMetrics(result *parser.AnalysisResult, lines [
 			codeLines++
 		}
 	}
-	
+
 	result.CodeLines = codeLines
 	result.CommentLines = commentLines
 	result.BlankLines = blankLines
 	result.MaxLineLength = maxLineLength
-	
+
 	if len(lines) > 0 {
 		result.AverageLineLength = float64(totalLineLength) / float64(len(lines))
 	}
@@ -83,7 +83,7 @@ func (c *Calculator) calculateLineMetrics(result *parser.AnalysisResult, lines [
 // calculateComplexityMetrics calculates various complexity metrics
 func (c *Calculator) calculateComplexityMetrics(result *parser.AnalysisResult) {
 	totalCyclomatic := 0
-	
+
 	// Calculate cyclomatic complexity for functions
 	for i, fn := range result.Functions {
 		result.Functions[i].CyclomaticComplexity = fn.Complexity
@@ -91,7 +91,7 @@ func (c *Calculator) calculateComplexityMetrics(result *parser.AnalysisResult) {
 		result.Functions[i].ParameterCount = len(fn.Parameters)
 		totalCyclomatic += fn.Complexity
 	}
-	
+
 	// Calculate cyclomatic complexity for classes and their methods
 	for i, class := range result.Classes {
 		classComplexity := 0
@@ -107,7 +107,7 @@ func (c *Calculator) calculateComplexityMetrics(result *parser.AnalysisResult) {
 		result.Classes[i].MethodCount = len(class.Methods)
 		result.Classes[i].FieldCount = len(class.Fields)
 	}
-	
+
 	result.CyclomaticComplexity = totalCyclomatic
 }
 
@@ -119,36 +119,36 @@ func (c *Calculator) calculateMaintainabilityIndex(result *parser.AnalysisResult
 		result.MaintainabilityIndex = 100.0
 		return
 	}
-	
+
 	// Simplified calculation without full Halstead metrics
 	// Using approximations based on available data
 	halsteadVolume := float64(result.CodeLines) * 2.0 // Approximation
 	cyclomaticComplexity := float64(result.CyclomaticComplexity)
 	linesOfCode := float64(result.CodeLines)
-	
+
 	if halsteadVolume <= 0 {
 		halsteadVolume = 1.0
 	}
 	if linesOfCode <= 0 {
 		linesOfCode = 1.0
 	}
-	
+
 	mi := 171.0 - 5.2*math.Log(halsteadVolume) - 0.23*cyclomaticComplexity - 16.2*math.Log(linesOfCode)
-	
+
 	// Normalize to 0-100 scale
 	if mi < 0 {
 		mi = 0
 	} else if mi > 100 {
 		mi = 100
 	}
-	
+
 	result.MaintainabilityIndex = mi
 }
 
 // calculateTechnicalDebt calculates technical debt score
 func (c *Calculator) calculateTechnicalDebt(result *parser.AnalysisResult) {
 	debt := 0.0
-	
+
 	// High complexity functions contribute to technical debt
 	for _, fn := range result.Functions {
 		if fn.CyclomaticComplexity > 10 {
@@ -161,7 +161,7 @@ func (c *Calculator) calculateTechnicalDebt(result *parser.AnalysisResult) {
 			debt += float64(fn.LinesOfCode-50) * 0.1
 		}
 	}
-	
+
 	// Large classes contribute to technical debt
 	for _, class := range result.Classes {
 		if class.MethodCount > 20 {
@@ -171,12 +171,12 @@ func (c *Calculator) calculateTechnicalDebt(result *parser.AnalysisResult) {
 			debt += float64(class.LinesOfCode-200) * 0.05
 		}
 	}
-	
+
 	// Long lines contribute to technical debt
 	if result.MaxLineLength > 120 {
 		debt += float64(result.MaxLineLength-120) * 0.01
 	}
-	
+
 	// Low comment ratio contributes to technical debt
 	if result.CodeLines > 0 {
 		commentRatio := float64(result.CommentLines) / float64(result.CodeLines)
@@ -184,17 +184,17 @@ func (c *Calculator) calculateTechnicalDebt(result *parser.AnalysisResult) {
 			debt += (0.1 - commentRatio) * 10.0
 		}
 	}
-	
+
 	result.TechnicalDebt = debt
 }
 
 // calculateDependencyMetrics calculates dependency-related metrics
 func (c *Calculator) calculateDependencyMetrics(result *parser.AnalysisResult) {
 	result.ImportCount = len(result.Imports)
-	
+
 	// Analyze dependencies
 	dependencies := make([]parser.Dependency, 0)
-	
+
 	for _, imp := range result.Imports {
 		dep := parser.Dependency{
 			Name:        imp,
@@ -205,7 +205,7 @@ func (c *Calculator) calculateDependencyMetrics(result *parser.AnalysisResult) {
 		}
 		dependencies = append(dependencies, dep)
 	}
-	
+
 	result.Dependencies = dependencies
 }
 
@@ -214,9 +214,9 @@ func (c *Calculator) classifyDependency(importPath, language string) string {
 	switch strings.ToLower(language) {
 	case "go":
 		if strings.Contains(importPath, ".") {
-			if strings.HasPrefix(importPath, "github.com") || 
-			   strings.HasPrefix(importPath, "golang.org") ||
-			   strings.HasPrefix(importPath, "google.golang.org") {
+			if strings.HasPrefix(importPath, "github.com") ||
+				strings.HasPrefix(importPath, "golang.org") ||
+				strings.HasPrefix(importPath, "google.golang.org") {
 				return "external"
 			}
 			return "internal"
@@ -232,15 +232,15 @@ func (c *Calculator) classifyDependency(importPath, language string) string {
 			"datetime": true, "collections": true, "itertools": true, "functools": true,
 			"math": true, "random": true, "string": true, "urllib": true, "http": true,
 		}
-		
+
 		if standardLibs[importPath] {
 			return "standard"
 		}
-		
+
 		if strings.Contains(importPath, ".") {
 			return "internal"
 		}
-		
+
 		return "external"
 	default:
 		return "unknown"
@@ -257,19 +257,19 @@ func (c *Calculator) CalculateQualityScore(maintainability, complexity, document
 		"testCoverage":    0.15,
 		"duplication":     0.1,
 	}
-	
+
 	// Normalize complexity score (lower is better)
 	normalizedComplexity := math.Max(0, 100-complexity)
-	
+
 	// Normalize duplication score (lower is better)
 	normalizedDuplication := math.Max(0, 100-duplication)
-	
+
 	score := maintainability*weights["maintainability"] +
 		normalizedComplexity*weights["complexity"] +
 		documentation*weights["documentation"] +
 		testCoverage*weights["testCoverage"] +
 		normalizedDuplication*weights["duplication"]
-	
+
 	// Determine grade
 	var grade string
 	switch {
@@ -284,6 +284,6 @@ func (c *Calculator) CalculateQualityScore(maintainability, complexity, document
 	default:
 		grade = "F"
 	}
-	
+
 	return score, grade
 }

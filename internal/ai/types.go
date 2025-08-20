@@ -6,10 +6,10 @@ import "github.com/tito-sala/codebasereaderv2/internal/engine"
 type AIClient interface {
 	// GenerateSummary generates a summary for the given project context
 	GenerateSummary(request *AIRequest) (*AIResponse, error)
-	
+
 	// GetProviderName returns the name of the AI provider
 	GetProviderName() string
-	
+
 	// IsConfigured returns true if the client is properly configured
 	IsConfigured() bool
 }
@@ -24,12 +24,12 @@ type AIRequest struct {
 
 // ProjectContext contains structured information about the project for AI analysis
 type ProjectContext struct {
-	Structure   string                 `json:"structure"`
-	KeyFiles    []string               `json:"key_files"`
-	Languages   []string               `json:"languages"`
-	Metrics     *engine.ProjectAnalysis `json:"metrics"`
-	FileCount   int                    `json:"file_count"`
-	LineCount   int                    `json:"line_count"`
+	Structure string                  `json:"structure"`
+	KeyFiles  []string                `json:"key_files"`
+	Languages []string                `json:"languages"`
+	Metrics   *engine.ProjectAnalysis `json:"metrics"`
+	FileCount int                     `json:"file_count"`
+	LineCount int                     `json:"line_count"`
 }
 
 // AIResponse contains the AI-generated analysis results

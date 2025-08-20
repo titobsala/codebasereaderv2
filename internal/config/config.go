@@ -107,7 +107,7 @@ func (c *Config) Validate() error {
 	// Validate AI provider
 	validProviders := []string{"anthropic", "openai", "openai-compatible"}
 	if !contains(validProviders, c.AIProvider) {
-		return fmt.Errorf("invalid ai_provider '%s', must be one of: %s", 
+		return fmt.Errorf("invalid ai_provider '%s', must be one of: %s",
 			c.AIProvider, strings.Join(validProviders, ", "))
 	}
 
@@ -123,7 +123,7 @@ func (c *Config) Validate() error {
 	// Validate output format
 	validFormats := []string{"json", "yaml", "text"}
 	if !contains(validFormats, c.OutputFormat) {
-		return fmt.Errorf("invalid output_format '%s', must be one of: %s", 
+		return fmt.Errorf("invalid output_format '%s', must be one of: %s",
 			c.OutputFormat, strings.Join(validFormats, ", "))
 	}
 

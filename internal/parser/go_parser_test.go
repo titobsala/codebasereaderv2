@@ -14,11 +14,11 @@ func TestGoParser_GetLanguageName(t *testing.T) {
 func TestGoParser_GetSupportedExtensions(t *testing.T) {
 	parser := NewGoParser()
 	extensions := parser.GetSupportedExtensions()
-	
+
 	if len(extensions) != 1 {
 		t.Errorf("Expected 1 supported extension, got %d", len(extensions))
 	}
-	
+
 	if extensions[0] != ".go" {
 		t.Errorf("Expected extension '.go', got '%s'", extensions[0])
 	}
@@ -26,7 +26,7 @@ func TestGoParser_GetSupportedExtensions(t *testing.T) {
 
 func TestGoParser_ParseSimpleFunction(t *testing.T) {
 	parser := NewGoParser()
-	
+
 	code := `package main
 
 import "fmt"
@@ -106,7 +106,7 @@ func add(a, b int) int {
 
 func TestGoParser_ParseStruct(t *testing.T) {
 	parser := NewGoParser()
-	
+
 	code := `package main
 
 type Person struct {
@@ -147,7 +147,7 @@ func (p *Person) SetAge(age int) {
 		if len(personStruct.Fields) != 3 {
 			t.Errorf("Expected Person struct to have 3 fields, got %d", len(personStruct.Fields))
 		}
-		
+
 		expectedFields := []string{"Name string", "Age int", "Email string"}
 		for i, expected := range expectedFields {
 			if i < len(personStruct.Fields) && personStruct.Fields[i] != expected {
@@ -178,7 +178,7 @@ func (p *Person) SetAge(age int) {
 
 func TestGoParser_ParseInterface(t *testing.T) {
 	parser := NewGoParser()
-	
+
 	code := `package main
 
 type Writer interface {
@@ -209,7 +209,7 @@ type ReadWriter interface {
 		if len(writerInterface.Methods) != 1 {
 			t.Errorf("Expected Writer interface to have 1 method, got %d", len(writerInterface.Methods))
 		}
-		
+
 		if len(writerInterface.Methods) > 0 {
 			writeMethod := writerInterface.Methods[0]
 			if writeMethod.Name != "Write" {
@@ -234,7 +234,7 @@ type ReadWriter interface {
 
 func TestGoParser_ParseComplexFunction(t *testing.T) {
 	parser := NewGoParser()
-	
+
 	code := `package main
 
 func complexFunction(items []string, threshold int) ([]string, error) {
@@ -294,7 +294,7 @@ func complexFunction(items []string, threshold int) ([]string, error) {
 
 func TestGoParser_ParseErrors(t *testing.T) {
 	parser := NewGoParser()
-	
+
 	// Test with invalid Go code
 	invalidCode := `package main
 
@@ -317,7 +317,7 @@ func main() {
 
 func TestGoParser_ParseMultipleImports(t *testing.T) {
 	parser := NewGoParser()
-	
+
 	code := `package main
 
 import (

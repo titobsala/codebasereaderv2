@@ -9,13 +9,13 @@ import (
 // PythonParser implements the Parser interface for Python language files
 type PythonParser struct {
 	// Regex patterns for Python constructs
-	classPattern      *regexp.Regexp
-	functionPattern   *regexp.Regexp
+	classPattern         *regexp.Regexp
+	functionPattern      *regexp.Regexp
 	asyncFunctionPattern *regexp.Regexp
-	methodPattern     *regexp.Regexp
-	importPattern     *regexp.Regexp
-	fromImportPattern *regexp.Regexp
-	decoratorPattern  *regexp.Regexp
+	methodPattern        *regexp.Regexp
+	importPattern        *regexp.Regexp
+	fromImportPattern    *regexp.Regexp
+	decoratorPattern     *regexp.Regexp
 }
 
 // NewPythonParser creates a new Python parser instance
@@ -54,7 +54,7 @@ func (p *PythonParser) Parse(filePath string, content []byte) (*AnalysisResult, 
 	for lineNum, line := range lines {
 		lineNum++ // Convert to 1-based indexing
 		trimmedLine := strings.TrimSpace(line)
-		
+
 		// Skip empty lines and comments
 		if trimmedLine == "" || strings.HasPrefix(trimmedLine, "#") {
 			continue
@@ -102,7 +102,7 @@ func (p *PythonParser) Parse(filePath string, content []byte) (*AnalysisResult, 
 
 			className := matches[2]
 			baseClasses := p.parseBaseClasses(matches[3])
-			
+
 			currentClass = &ClassInfo{
 				Name:         className,
 				LineStart:    lineNum,
@@ -113,7 +113,7 @@ func (p *PythonParser) Parse(filePath string, content []byte) (*AnalysisResult, 
 				IsPublic:     p.isPublicClass(className),
 				HasDocstring: p.hasDocstring(lines, lineNum),
 			}
-			
+
 			// Clear decorators after use
 			decorators = []string{}
 			continue
@@ -122,7 +122,7 @@ func (p *PythonParser) Parse(filePath string, content []byte) (*AnalysisResult, 
 		// Handle function/method definitions (regular and async)
 		var funcMatches []string
 		var isAsync bool
-		
+
 		if matches := p.functionPattern.FindStringSubmatch(line); matches != nil {
 			funcMatches = matches
 			isAsync = false
@@ -130,7 +130,7 @@ func (p *PythonParser) Parse(filePath string, content []byte) (*AnalysisResult, 
 			funcMatches = matches
 			isAsync = true
 		}
-		
+
 		if funcMatches != nil {
 			funcName := funcMatches[2]
 			if isAsync {
@@ -138,7 +138,7 @@ func (p *PythonParser) Parse(filePath string, content []byte) (*AnalysisResult, 
 			}
 			params := p.parseParameters(funcMatches[3])
 			returnType := strings.TrimSpace(funcMatches[4])
-			
+
 			funcInfo := FunctionInfo{
 				Name:                 funcName,
 				LineStart:            lineNum,
@@ -170,7 +170,7 @@ func (p *PythonParser) Parse(filePath string, content []byte) (*AnalysisResult, 
 				// This is a standalone function
 				result.Functions = append(result.Functions, funcInfo)
 			}
-			
+
 			// Clear decorators after use
 			decorators = []string{}
 		}
@@ -182,14 +182,14 @@ func (p *PythonParser) Parse(filePath string, content []byte) (*AnalysisResult, 
 		currentClass.LinesOfCode = currentClass.LineEnd - currentClass.LineStart + 1
 		currentClass.MethodCount = len(currentClass.Methods)
 		currentClass.FieldCount = len(currentClass.Fields)
-		
+
 		// Calculate class complexity as sum of method complexities
 		classComplexity := 0
 		for _, method := range currentClass.Methods {
 			classComplexity += method.Complexity
 		}
 		currentClass.Complexity = classComplexity
-		
+
 		result.Classes = append(result.Classes, *currentClass)
 	}
 
@@ -225,7 +225,7 @@ func (p *PythonParser) getIndentLevel(line string) int {
 func (p *PythonParser) parseImports(importStr string) []string {
 	var imports []string
 	parts := strings.Split(importStr, ",")
-	
+
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
 		// Handle "as" aliases
@@ -236,7 +236,7 @@ func (p *PythonParser) parseImports(importStr string) []string {
 			imports = append(imports, part)
 		}
 	}
-	
+
 	return imports
 }
 
@@ -245,17 +245,17 @@ func (p *PythonParser) parseBaseClasses(baseStr string) []string {
 	if baseStr == "" {
 		return []string{}
 	}
-	
+
 	var bases []string
 	parts := strings.Split(baseStr, ",")
-	
+
 	for _, part := range parts {
 		base := strings.TrimSpace(part)
 		if base != "" {
 			bases = append(bases, base)
 		}
 	}
-	
+
 	return bases
 }
 
@@ -264,10 +264,10 @@ func (p *PythonParser) parseParameters(paramStr string) []string {
 	if paramStr == "" {
 		return []string{}
 	}
-	
+
 	var params []string
 	parts := strings.Split(paramStr, ",")
-	
+
 	for _, part := range parts {
 		param := strings.TrimSpace(part)
 		if param != "" {
@@ -279,65 +279,65 @@ func (p *PythonParser) parseParameters(paramStr string) []string {
 			params = append(params, param)
 		}
 	}
-	
+
 	return params
 }
 
 // calculateComplexity calculates cyclomatic complexity for a Python function
 func (p *PythonParser) calculateComplexity(lines []string, startLine, baseIndent int) int {
 	complexity := 1 // Base complexity
-	
+
 	// Look ahead to find the end of the function
 	for i := startLine + 1; i < len(lines); i++ {
 		line := lines[i]
 		trimmedLine := strings.TrimSpace(line)
-		
+
 		// Skip empty lines and comments
 		if trimmedLine == "" || strings.HasPrefix(trimmedLine, "#") {
 			continue
 		}
-		
+
 		// If we've reached a line with equal or less indentation, we're done
 		currentIndent := p.getIndentLevel(line)
 		if currentIndent <= baseIndent && trimmedLine != "" {
 			break
 		}
-		
+
 		// Count complexity-increasing constructs
-		if strings.HasPrefix(trimmedLine, "if ") || 
-		   strings.HasPrefix(trimmedLine, "elif ") ||
-		   strings.HasPrefix(trimmedLine, "for ") ||
-		   strings.HasPrefix(trimmedLine, "while ") ||
-		   strings.HasPrefix(trimmedLine, "except ") ||
-		   strings.HasPrefix(trimmedLine, "with ") ||
-		   strings.HasPrefix(trimmedLine, "try:") ||
-		   strings.HasPrefix(trimmedLine, "finally:") ||
-		   strings.HasPrefix(trimmedLine, "async for ") ||
-		   strings.HasPrefix(trimmedLine, "async with ") {
+		if strings.HasPrefix(trimmedLine, "if ") ||
+			strings.HasPrefix(trimmedLine, "elif ") ||
+			strings.HasPrefix(trimmedLine, "for ") ||
+			strings.HasPrefix(trimmedLine, "while ") ||
+			strings.HasPrefix(trimmedLine, "except ") ||
+			strings.HasPrefix(trimmedLine, "with ") ||
+			strings.HasPrefix(trimmedLine, "try:") ||
+			strings.HasPrefix(trimmedLine, "finally:") ||
+			strings.HasPrefix(trimmedLine, "async for ") ||
+			strings.HasPrefix(trimmedLine, "async with ") {
 			complexity++
 		}
-		
+
 		// Count logical operators that increase complexity
 		if strings.Contains(trimmedLine, " and ") ||
-		   strings.Contains(trimmedLine, " or ") {
+			strings.Contains(trimmedLine, " or ") {
 			// Count the number of logical operators
 			andCount := strings.Count(trimmedLine, " and ")
 			orCount := strings.Count(trimmedLine, " or ")
 			complexity += andCount + orCount
 		}
-		
+
 		// Count list/dict comprehensions
-		if strings.Contains(trimmedLine, " for ") && 
-		   (strings.Contains(trimmedLine, "[") || strings.Contains(trimmedLine, "{")) {
+		if strings.Contains(trimmedLine, " for ") &&
+			(strings.Contains(trimmedLine, "[") || strings.Contains(trimmedLine, "{")) {
 			complexity++
 		}
-		
+
 		// Count lambda functions
 		if strings.Contains(trimmedLine, "lambda ") {
 			complexity++
 		}
 	}
-	
+
 	return complexity
 }
 
@@ -366,7 +366,7 @@ func (p *PythonParser) hasDocstring(lines []string, lineNum int) bool {
 	if lineNum >= len(lines) {
 		return false
 	}
-	
+
 	// Look for docstring in the next few lines
 	for i := lineNum; i < len(lines) && i < lineNum+3; i++ {
 		line := strings.TrimSpace(lines[i])
@@ -377,6 +377,6 @@ func (p *PythonParser) hasDocstring(lines []string, lineNum int) bool {
 			break // Found non-comment, non-empty line
 		}
 	}
-	
+
 	return false
 }

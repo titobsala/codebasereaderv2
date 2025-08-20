@@ -147,7 +147,7 @@ func (m *MockParser) Parse(filePath string, content []byte) (*parser.AnalysisRes
 	if m.parseFunc != nil {
 		return m.parseFunc(filePath, content)
 	}
-	
+
 	return &parser.AnalysisResult{
 		FilePath:  filePath,
 		Language:  m.name,
@@ -206,18 +206,18 @@ class Parser:
     
     def run(self):
         pass`,
-		"README.md": "# Test Project\n\nThis is a test project.",
+		"README.md":   "# Test Project\n\nThis is a test project.",
 		"config.json": `{"setting": "value"}`,
 	}
 
 	for filePath, content := range testFiles {
 		fullPath := filepath.Join(tempDir, filePath)
 		dir := filepath.Dir(fullPath)
-		
+
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatalf("Failed to create directory %s: %v", dir, err)
 		}
-		
+
 		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
 			t.Fatalf("Failed to create file %s: %v", fullPath, err)
 		}
@@ -242,7 +242,7 @@ func TestEngine_AnalyzeDirectory(t *testing.T) {
 	// Register mock parsers
 	goParser := &MockParser{name: "Go", extensions: []string{"go"}}
 	pyParser := &MockParser{name: "Python", extensions: []string{"py"}}
-	
+
 	engine.GetParserRegistry().RegisterParser(goParser)
 	engine.GetParserRegistry().RegisterParser(pyParser)
 
@@ -392,7 +392,7 @@ func TestEngine_GetFileWalkerStats(t *testing.T) {
 	engine := NewEngine(nil)
 	goParser := &MockParser{name: "Go", extensions: []string{"go"}}
 	pyParser := &MockParser{name: "Python", extensions: []string{"py"}}
-	
+
 	engine.GetParserRegistry().RegisterParser(goParser)
 	engine.GetParserRegistry().RegisterParser(pyParser)
 
@@ -449,7 +449,7 @@ func TestEngine_ConcurrentAnalysis(t *testing.T) {
 			}, nil
 		},
 	}
-	
+
 	engine.GetParserRegistry().RegisterParser(slowParser)
 
 	// Measure analysis time
@@ -484,7 +484,7 @@ func TestEngine_ErrorHandling(t *testing.T) {
 			return nil, fmt.Errorf("mock parsing error for %s", filePath)
 		},
 	}
-	
+
 	engine.GetParserRegistry().RegisterParser(errorParser)
 
 	// Analyze directory - should handle errors gracefully
