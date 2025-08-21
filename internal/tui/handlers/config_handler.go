@@ -96,7 +96,10 @@ func (ch *ConfigHandler) updateConfig(key, value string, m *core.MainModel) tea.
 	case "ai_provider":
 		if value == "anthropic" || value == "openai" {
 			config.AIProvider = value
-			m.GetInputField().SetValue("")
+			// Clear the input field by setting it to a new textinput
+			ti := m.GetInputField()
+			ti.Reset()
+			m.SetInputField(ti)
 			return func() tea.Msg {
 				return core.StatusUpdateMsg{Message: fmt.Sprintf("AI provider set to %s", value)}
 			}
@@ -107,14 +110,20 @@ func (ch *ConfigHandler) updateConfig(key, value string, m *core.MainModel) tea.
 		}
 	case "api_key":
 		config.APIKey = value
-		m.GetInputField().SetValue("")
+		// Clear the input field by setting it to a new textinput
+		ti := m.GetInputField()
+		ti.Reset()
+		m.SetInputField(ti)
 		return func() tea.Msg {
 			return core.StatusUpdateMsg{Message: "API key updated"}
 		}
 	case "max_workers":
 		if workers := ch.parseInt(value); workers > 0 && workers <= 16 {
 			config.MaxWorkers = workers
-			m.GetInputField().SetValue("")
+			// Clear the input field by setting it to a new textinput
+			ti := m.GetInputField()
+			ti.Reset()
+			m.SetInputField(ti)
 			return func() tea.Msg {
 				return core.StatusUpdateMsg{Message: fmt.Sprintf("Max workers set to %d", workers)}
 			}
@@ -126,7 +135,10 @@ func (ch *ConfigHandler) updateConfig(key, value string, m *core.MainModel) tea.
 	case "timeout":
 		if timeout := ch.parseInt(value); timeout > 0 && timeout <= 300 {
 			config.Timeout = timeout
-			m.GetInputField().SetValue("")
+			// Clear the input field by setting it to a new textinput
+			ti := m.GetInputField()
+			ti.Reset()
+			m.SetInputField(ti)
 			return func() tea.Msg {
 				return core.StatusUpdateMsg{Message: fmt.Sprintf("Timeout set to %d seconds", timeout)}
 			}
@@ -152,7 +164,9 @@ func (ch *ConfigHandler) resetConfig(m *core.MainModel) tea.Cmd {
 
 	// Update the engine's config (this would need to be implemented in the engine)
 	// For now, just show a message
-	m.GetInputField().SetValue("")
+	ti := m.GetInputField()
+	ti.Reset()
+	m.SetInputField(ti)
 	return func() tea.Msg {
 		return core.StatusUpdateMsg{Message: "Configuration reset to defaults"}
 	}
@@ -168,7 +182,9 @@ func (ch *ConfigHandler) addExcludePattern(pattern string, m *core.MainModel) te
 
 	config := m.GetAnalysisEngine().GetConfig()
 	config.ExcludePatterns = append(config.ExcludePatterns, pattern)
-	m.GetInputField().SetValue("")
+	ti := m.GetInputField()
+	ti.Reset()
+	m.SetInputField(ti)
 	return func() tea.Msg {
 		return core.StatusUpdateMsg{Message: fmt.Sprintf("Added exclude pattern: %s", pattern)}
 	}
@@ -186,7 +202,9 @@ func (ch *ConfigHandler) removeExcludePattern(pattern string, m *core.MainModel)
 	for i, p := range config.ExcludePatterns {
 		if p == pattern {
 			config.ExcludePatterns = append(config.ExcludePatterns[:i], config.ExcludePatterns[i+1:]...)
-			m.GetInputField().SetValue("")
+			ti := m.GetInputField()
+			ti.Reset()
+			m.SetInputField(ti)
 			return func() tea.Msg {
 				return core.StatusUpdateMsg{Message: fmt.Sprintf("Removed exclude pattern: %s", pattern)}
 			}

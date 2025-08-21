@@ -427,17 +427,19 @@ func (m *MainModel) View() string {
 			// Ensure metrics are shown for the Analysis tab
 			if !m.contentView.ShowMetrics() {
 				m.contentView.ToggleMetrics() // Turn on if not on
-				if m.contentView.ShowSummary() { m.contentView.ToggleSummary() } // Turn off if on
+				if m.contentView.ShowSummary() {
+					m.contentView.ToggleSummary()
+				} // Turn off if on
 				m.contentView.UpdateContentFromAnalysis()
 			}
 		}
 		content = m.contentView.View(m.width, contentHeight)
 	case ConfigView:
-		content = m.renderConfigView(m.width, contentHeight)
+		content = m.renderConfigView(m.width)
 	case HelpView:
 		content = m.renderHelpView(m.width, contentHeight)
 	case LoadingView:
-		content = m.renderLoadingView(m.width, contentHeight)
+		content = m.renderLoadingView(m.width)
 	case ConfirmationView:
 		content = m.renderConfirmationView(m.width, contentHeight)
 	}
@@ -480,7 +482,7 @@ func (m *MainModel) switchView() {
 }
 
 // renderConfigView renders the configuration view
-func (m *MainModel) renderConfigView(width, height int) string {
+func (m *MainModel) renderConfigView(width int) string {
 	var b strings.Builder
 
 	// Header
@@ -544,7 +546,7 @@ func (m *MainModel) renderHelpView(width, height int) string {
 }
 
 // renderLoadingView renders the loading view
-func (m *MainModel) renderLoadingView(width, height int) string {
+func (m *MainModel) renderLoadingView(width int) string {
 	if !m.loading {
 		return ""
 	}
@@ -833,91 +835,30 @@ func (m *MainModel) updateStatusBarKeyBinds() {
 	var keyBinds []components.KeyBind
 
 	// Global key bindings
-	keyBinds = append(keyBinds, components.KeyBind{" ?", "help"})
-	keyBinds = append(keyBinds, components.KeyBind{" q", "quit"})
-	keyBinds = append(keyBinds, components.KeyBind{" tab", "switch view"})
+	keyBinds = append(keyBinds, components.KeyBind{Key: " ?", Description: "help"})
+	keyBinds = append(keyBinds, components.KeyBind{Key: " q", Description: "quit"})
+	keyBinds = append(keyBinds, components.KeyBind{Key: " tab", Description: "switch view"})
 
 	// View-specific key bindings
 	switch m.currentView {
 	case FileTreeView:
-		keyBinds = append(keyBinds, components.KeyBind{" a", "analyze"})
-		keyBinds = append(keyBinds, components.KeyBind{" r", "refresh"})
-		keyBinds = append(keyBinds, components.KeyBind{" enter", "select"})
+		keyBinds = append(keyBinds, components.KeyBind{Key: " a", Description: "analyze"})
+		keyBinds = append(keyBinds, components.KeyBind{Key: " r", Description: "refresh"})
+		keyBinds = append(keyBinds, components.KeyBind{Key: " enter", Description: "select"})
 	case ContentView:
 		if m.analysisData != nil {
-			keyBinds = append(keyBinds, components.KeyBind{" m", "metrics"})
-			keyBinds = append(keyBinds, components.KeyBind{" s", "summary"})
-			keyBinds = append(keyBinds, components.KeyBind{" e", "export"})
+			keyBinds = append(keyBinds, components.KeyBind{Key: " m", Description: "metrics"})
+			keyBinds = append(keyBinds, components.KeyBind{Key: " s", Description: "summary"})
+			keyBinds = append(keyBinds, components.KeyBind{Key: " e", Description: "export"})
 		}
-		keyBinds = append(keyBinds, components.KeyBind{" ↑↓", "scroll"})
+		keyBinds = append(keyBinds, components.KeyBind{Key: " ↑↓", Description: "scroll"})
 	case ConfigView:
-		keyBinds = append(keyBinds, components.KeyBind{" enter", "execute"})
+		keyBinds = append(keyBinds, components.KeyBind{Key: " enter", Description: "execute"})
 	case LoadingView:
-		keyBinds = append(keyBinds, components.KeyBind{" ctrl+c", "cancel"})
+		keyBinds = append(keyBinds, components.KeyBind{Key: " ctrl+c", Description: "cancel"})
 	}
 
 	m.statusBar.SetKeyBinds(keyBinds)
-}
-
-// getNextView returns the next view in the cycle
-func (m *MainModel) getNextView() ViewType {
-	switch m.currentView {
-	case FileTreeView:
-		return ContentView
-	case ContentView:
-		return ConfigView
-	case ConfigView:
-		return FileTreeView
-	case HelpView:
-		return FileTreeView
-	case LoadingView:
-		return FileTreeView
-	default:
-		return FileTreeView
-	}
-}
-
-// getPreviousView returns the previous view in the cycle
-func (m *MainModel) getPreviousView() ViewType {
-	switch m.currentView {
-	case FileTreeView:
-		return ConfigView
-	case ContentView:
-		return FileTreeView
-	case ConfigView:
-		return ContentView
-	case HelpView:
-		return FileTreeView
-	case LoadingView:
-		return FileTreeView
-	default:
-		return FileTreeView
-	}
-}
-
-// handleGlobalKeyBinding handles global keyboard shortcuts
-func (m *MainModel) handleGlobalKeyBinding(key string) tea.Cmd {
-	switch key {
-	case "m":
-		if m.currentView == ContentView && m.analysisData != nil {
-			return func() tea.Msg {
-				return ToggleMetricsMsg{}
-			}
-		}
-	case "s":
-		if m.currentView == ContentView && m.analysisData != nil {
-			return func() tea.Msg {
-				return ToggleSummaryMsg{}
-			}
-		}
-	case "e":
-		if m.analysisData != nil {
-			return func() tea.Msg {
-				return ExportMsg{Format: "json", Path: "analysis.json"}
-			}
-		}
-	}
-	return nil
 }
 
 // processConfigCommand processes configuration commands

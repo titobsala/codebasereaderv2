@@ -28,6 +28,7 @@ func TestAnalysisIntegration(t *testing.T) {
 	// Test analysis started message
 	startedMsg := AnalysisStartedMsg{Path: "../testdata"}
 	updatedModel, _ = mainModel.Update(startedMsg)
+	mainModel = updatedModel.(*MainModel)
 
 	// Test analysis complete message
 	analysis := &engine.ProjectAnalysis{

@@ -47,6 +47,46 @@ func (m *FileTreeModel) Init() tea.Cmd {
 	return m.loadDirectory(m.rootPath)
 }
 
+// GetCursor returns the current cursor position (for testing)
+func (m *FileTreeModel) GetCursor() int {
+	return m.cursor
+}
+
+// GetSelected returns the selected items map (for testing)
+func (m *FileTreeModel) GetSelected() map[int]bool {
+	return m.selected
+}
+
+// GetExpanded returns the expanded items map (for testing)
+func (m *FileTreeModel) GetExpanded() map[string]bool {
+	return m.expanded
+}
+
+// GetRootPath returns the root path (for testing)
+func (m *FileTreeModel) GetRootPath() string {
+	return m.rootPath
+}
+
+// GetItems returns the items slice (for testing)
+func (m *FileTreeModel) GetItems() []shared.FileTreeItem {
+	return m.items
+}
+
+// SetItems sets the items slice (for testing)
+func (m *FileTreeModel) SetItems(items []shared.FileTreeItem) {
+	m.items = items
+}
+
+// IsFileSupported checks if a file is supported (for testing)
+func (m *FileTreeModel) IsFileSupported(filename string) bool {
+	return m.isFileSupported(filename)
+}
+
+// GetFileIcon returns the icon for a file item (for testing)
+func (m *FileTreeModel) GetFileIcon(item shared.FileTreeItem) string {
+	return m.getFileIcon(item)
+}
+
 // Update handles messages for the file tree
 func (m *FileTreeModel) Update(msg tea.Msg) (*FileTreeModel, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -75,6 +115,11 @@ func (m *FileTreeModel) Update(msg tea.Msg) (*FileTreeModel, tea.Cmd) {
 		case "r":
 			return m, m.loadDirectory(m.rootPath)
 		case "a":
+			// If no items are loaded, try to load them first
+			if len(m.items) == 0 {
+				return m, m.loadDirectory(m.currentPath)
+			}
+
 			// Check if any items are selected
 			if m.hasSelectedItems() {
 				// Analyze selected items (existing behavior for specific selections)
@@ -611,4 +656,3 @@ func (m *FileTreeModel) SetCurrentPath(path string) {
 func (m *FileTreeModel) LoadDirectory(path string) tea.Cmd {
 	return m.loadDirectory(path)
 }
-

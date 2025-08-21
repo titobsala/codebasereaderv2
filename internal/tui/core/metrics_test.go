@@ -4,41 +4,43 @@ import (
 	"testing"
 
 	"github.com/tito-sala/codebasereaderv2/internal/metrics"
+	"github.com/tito-sala/codebasereaderv2/internal/tui/components"
+	"github.com/tito-sala/codebasereaderv2/internal/tui/views"
 )
 
 func TestMetricsDisplay(t *testing.T) {
-	display := NewMetricsDisplay()
+	display := components.NewMetricsDisplay()
 
 	// Test initial state
-	if display.mode != OverviewMode {
-		t.Errorf("Expected initial mode to be OverviewMode, got %v", display.mode)
+	if display.GetMode() != components.OverviewMode {
+		t.Errorf("Expected initial mode to be OverviewMode, got %v", display.GetMode())
 	}
 
 	// Test mode switching
-	display.SetMode(DetailedMode)
-	if display.mode != DetailedMode {
-		t.Errorf("Expected mode to be DetailedMode, got %v", display.mode)
+	display.SetMode(components.DetailedMode)
+	if display.GetMode() != components.DetailedMode {
+		t.Errorf("Expected mode to be DetailedMode, got %v", display.GetMode())
 	}
 
 	// Set up dimensions and max scroll for testing
-	display.height = 20
-	display.maxScroll = 10
+	display.SetHeight(20)
+	display.SetMaxScroll(10)
 
 	// Test scrolling
 	display.Scroll(5)
-	if display.scrollY != 5 {
-		t.Errorf("Expected scrollY to be 5, got %d", display.scrollY)
+	if display.GetScrollY() != 5 {
+		t.Errorf("Expected scrollY to be 5, got %d", display.GetScrollY())
 	}
 
 	// Test scroll bounds
 	display.Scroll(-10)
-	if display.scrollY != 0 {
-		t.Errorf("Expected scrollY to be 0 (bounded), got %d", display.scrollY)
+	if display.GetScrollY() != 0 {
+		t.Errorf("Expected scrollY to be 0 (bounded), got %d", display.GetScrollY())
 	}
 }
 
 func TestMetricsDisplayRender(t *testing.T) {
-	display := NewMetricsDisplay()
+	display := components.NewMetricsDisplay()
 
 	// Test with nil analysis
 	result := display.Render(nil, 80, 24)
@@ -111,28 +113,28 @@ func TestMetricsDisplayRender(t *testing.T) {
 	}
 
 	// Test overview mode
-	display.SetMode(OverviewMode)
+	display.SetMode(components.OverviewMode)
 	result = display.Render(analysis, 80, 24)
 	if result == "" {
 		t.Error("Expected non-empty result for overview mode")
 	}
 
 	// Test detailed mode
-	display.SetMode(DetailedMode)
+	display.SetMode(components.DetailedMode)
 	result = display.Render(analysis, 80, 24)
 	if result == "" {
 		t.Error("Expected non-empty result for detailed mode")
 	}
 
 	// Test quality mode
-	display.SetMode(QualityMode)
+	display.SetMode(components.QualityMode)
 	result = display.Render(analysis, 80, 24)
 	if result == "" {
 		t.Error("Expected non-empty result for quality mode")
 	}
 
 	// Test dependency mode
-	display.SetMode(DependencyMode)
+	display.SetMode(components.DependencyMode)
 	result = display.Render(analysis, 80, 24)
 	if result == "" {
 		t.Error("Expected non-empty result for dependency mode")
@@ -140,10 +142,10 @@ func TestMetricsDisplayRender(t *testing.T) {
 }
 
 func TestContentViewModelWithEnhancedMetrics(t *testing.T) {
-	contentView := NewContentViewModel()
+	contentView := views.NewContentViewModel()
 
 	// Test initial state
-	if contentView.metricsDisplay == nil {
+	if contentView.GetMetricsDisplay() == nil {
 		t.Error("Expected metricsDisplay to be initialized")
 	}
 
@@ -168,16 +170,16 @@ func TestContentViewModelWithEnhancedMetrics(t *testing.T) {
 	}
 
 	contentView.SetAnalysisData(analysisData)
-	if contentView.analysisData != analysisData {
+	if contentView.GetAnalysisData() != analysisData {
 		t.Error("Expected analysis data to be set")
 	}
 
 	// Test metrics toggle
-	contentView.showMetrics = true
-	contentView.updateContentFromAnalysis()
+	contentView.SetShowMetrics(true)
+	contentView.UpdateContentFromAnalysis()
 
 	// Content should be updated with metrics
-	if contentView.content == "" {
+	if contentView.GetContent() == "" {
 		t.Error("Expected content to be updated with metrics")
 	}
 }

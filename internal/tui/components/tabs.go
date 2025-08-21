@@ -91,13 +91,13 @@ func (m *TabsModel) SetActiveTab(index int) {
 	}
 }
 
-// renderTabs renders the tab bar as a horizontal row
+// renderTabs renders the tab bar as a horizontal row with advanced styling
 func (m *TabsModel) renderTabs() string {
 	var renderedTabs []string
 
 	tabWidth := (m.width - len(m.Tabs) - 1) / len(m.Tabs) // Account for spacing between tabs
-	if tabWidth < 10 {
-		tabWidth = 10 // Minimum tab width
+	if tabWidth < 12 {
+		tabWidth = 12 // Minimum tab width for better readability
 	}
 
 	for i, tab := range m.Tabs {
@@ -105,25 +105,60 @@ func (m *TabsModel) renderTabs() string {
 		isActive := i == m.activeTab
 
 		if isActive {
+			// Enhanced active tab styling with gradient-like effect and borders
 			style = lipgloss.NewStyle().
 				Bold(true).
 				Foreground(NeutralWhite).
 				Background(PrimaryPurple).
-				Padding(0, 1).
-				Align(lipgloss.Center)
+				Padding(1, 2).
+				Align(lipgloss.Center).
+				Border(lipgloss.Border{
+					Bottom: "▂",
+					Left:   "▏",
+					Right:  "▕",
+				}).
+				BorderForeground(PrimaryBlue).
+				BorderBackground(PrimaryPurple)
 		} else {
+			// Enhanced inactive tab styling with subtle hover effects
 			style = lipgloss.NewStyle().
 				Foreground(NeutralMedium).
-				Padding(0, 1).
-				Align(lipgloss.Center)
+				Padding(1, 2).
+				Align(lipgloss.Center).
+				Border(lipgloss.Border{
+					Bottom: "─",
+				}).
+				BorderForeground(NeutralDark).
+				Underline(false)
+
+			// Add subtle background for better visual separation
+			if i == m.activeTab-1 || i == m.activeTab+1 {
+				// Adjacent tabs get slightly different styling for better UX
+				style = style.Background(lipgloss.Color("#2A2A3A"))
+			}
 		}
 
-		// Each tab has equal width with centered text
+		// Enhanced tab text with better spacing and icons
 		tabText := tab.Icon + " " + tab.Title
+
+		// Apply additional styling for active tab to make it stand out
+		if isActive {
+			tabText = "🔥 " + tabText + " 🔥" // Add fire emojis for active tab
+		}
+
 		renderedTabs = append(renderedTabs, style.Width(tabWidth).Render(tabText))
 	}
 
-	return lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
+	// Join tabs with better spacing and add subtle background
+	tabsRow := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
+
+	// Add a subtle background container for the entire tab bar
+	tabBarContainer := lipgloss.NewStyle().
+		Background(lipgloss.Color("#1A1A2A")).
+		Padding(0, 1).
+		Render(tabsRow)
+
+	return tabBarContainer
 }
 
 // GetTabTitle returns the title of the active tab

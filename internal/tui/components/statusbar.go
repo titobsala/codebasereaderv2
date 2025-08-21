@@ -46,7 +46,6 @@ func (m StatusBarModel) Update(msg tea.Msg) (StatusBarModel, tea.Cmd) {
 
 // View renders the status bar
 func (m StatusBarModel) View(width int) string {
-	m.width = width
 
 	// Create styled status bar background
 	statusBarStyle := lipgloss.NewStyle().

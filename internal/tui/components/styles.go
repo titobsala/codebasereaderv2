@@ -87,10 +87,6 @@ var (
 			Border(lipgloss.DoubleBorder()).
 			BorderForeground(PrimaryBlue)
 
-	// Normal text with better contrast
-	normalStyle = lipgloss.NewStyle().
-			Foreground(NeutralLight)
-
 	// Main headers with sophisticated styling
 	HeaderStyle = lipgloss.NewStyle().
 			Foreground(PrimaryPurple).
@@ -173,11 +169,6 @@ var (
 				Border(lipgloss.RoundedBorder()).
 				BorderForeground(NeutralMedium)
 
-	// Enhanced separator with visual flair
-	separatorStyle = lipgloss.NewStyle().
-			Foreground(PrimaryBlue).
-			Bold(true)
-
 	// Improved scroll info with better visibility
 	ScrollInfoStyle = lipgloss.NewStyle().
 			Foreground(NeutralMedium).
@@ -209,13 +200,6 @@ var (
 			Border(lipgloss.DoubleBorder()).
 			BorderForeground(PrimaryCyan)
 
-	// Progress bar container
-	progressContainerStyle = lipgloss.NewStyle().
-				Padding(0, 1).
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(PrimaryBlue).
-				Background(NeutralDark)
-
 	// Metric value styling
 	MetricValueStyle = lipgloss.NewStyle().
 				Foreground(PrimaryGreen).
@@ -239,35 +223,6 @@ var (
 			Padding(1, 2).
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(InfoBlue)
-
-	// Language tag styling
-	languageTagStyle = lipgloss.NewStyle().
-				Foreground(NeutralWhite).
-				Background(AccentIndigo).
-				Padding(0, 1).
-				Bold(true).
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(PrimaryPurple)
-
-	// Table header styling
-	tableHeaderStyle = lipgloss.NewStyle().
-				Foreground(NeutralWhite).
-				Background(PrimaryPurple).
-				Bold(true).
-				Padding(0, 1).
-				Border(lipgloss.Border{
-			Bottom: "═",
-		}).
-		BorderForeground(PrimaryBlue)
-
-	// Table row styling
-	tableRowStyle = lipgloss.NewStyle().
-			Foreground(NeutralLight).
-			Padding(0, 1).
-			Border(lipgloss.Border{
-			Bottom: "─",
-		}).
-		BorderForeground(NeutralDark)
 
 	// Badge styling for counts and numbers
 	badgeStyle = lipgloss.NewStyle().
@@ -400,18 +355,6 @@ func CreateBadge(text string, badgeType string) string {
 	}
 
 	return style.Render(text)
-}
-
-// createSeparator creates a styled separator line
-func createSeparator(width int, char string) string {
-	if char == "" {
-		char = "─"
-	}
-
-	return separatorStyle.
-		Width(width).
-		Align(lipgloss.Center).
-		Render(strings.Repeat(char, width))
 }
 
 // CreateHighlight creates a highlighted text box

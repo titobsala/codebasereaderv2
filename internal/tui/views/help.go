@@ -73,19 +73,25 @@ Navigate through this help using the arrow keys or number shortcuts (1-8).`,
 			Icon:  "🧭",
 			Content: `Master the navigation system to efficiently browse your codebase:
 
-The interface is organized into tabs that you can navigate between:
-• Explorer Tab: File tree and directory navigation
-• Analysis Tab: Metrics, quality scores, and analysis results  
-• Configuration Tab: Settings and preferences
-• Help Tab: This comprehensive help system
+MODERN TABBED INTERFACE:
+The interface is organized into four main tabs with enhanced visual indicators:
+• 🔥 Explorer Tab: File tree and directory navigation (default view)
+• 📊 Analysis Tab: Metrics, quality scores, and analysis results
+• ⚙️ Configuration Tab: Settings and preferences
+• ❓ Help Tab: This comprehensive help system
 
-Use the tabbed interface or keyboard shortcuts to switch between views seamlessly.`,
+ACTIVE TAB INDICATORS:
+• Active tabs show with fire emojis (🔥) and purple background
+• Adjacent tabs have subtle background highlighting
+• Tab borders provide visual separation and feedback
+
+Use the tabbed interface, keyboard shortcuts, or number keys to switch between views seamlessly.`,
 			KeyBindings: []KeyBinding{
 				{[]string{"↑", "↓", "k", "j"}, "Move up/down in lists and content", "All Views"},
 				{[]string{"←", "→", "h", "l"}, "Navigate horizontally, collapse/expand", "File Tree"},
 				{[]string{"Enter", "Space"}, "Select item or toggle expansion", "File Tree"},
-				{[]string{"Tab", "Shift+Tab"}, "Switch between tabs", "Global"},
-				{[]string{"1", "2", "3", "4"}, "Jump to specific tabs", "Global"},
+				{[]string{"Tab", "Shift+Tab"}, "Switch between main tabs", "Global"},
+				{[]string{"1", "2", "3", "4"}, "Jump directly to Explorer/Analysis/Config/Help tabs", "Global"},
 				{[]string{"PgUp", "PgDn"}, "Scroll content by page", "Content Areas"},
 				{[]string{"Home", "End", "g", "G"}, "Jump to start/end", "Content Areas"},
 				{[]string{"Ctrl+u", "Ctrl+d"}, "Scroll half page up/down", "Content Areas"},
@@ -122,41 +128,29 @@ QUALITY SCORING:
 			},
 		},
 		{
-			Title: "Metrics Modes",
-			Icon:  "📈",
-			Content: `Four specialized metrics visualization modes (use 1-4 keys in Analysis tab):
+			Title: "Analysis Tab Features",
+			Icon:  "📊",
+			Content: `The Analysis tab provides comprehensive project insights with multiple visualization modes:
 
-MODE 1 - OVERVIEW:
-• Project summary with key statistics
-• Quality score with visual grade indicator
-• Language breakdown with percentage bars
-• Top-level metrics at a glance
+PRIMARY ANALYSIS MODES (accessible via content view toggles):
+• Metrics View (m): Detailed code metrics, complexity analysis, and statistics
+• Summary View (s): High-level project overview with key insights
+• Export (e): Generate reports in JSON, CSV, and other formats
 
-MODE 2 - DETAILED ANALYSIS:
-• Comprehensive project metrics breakdown
-• Directory-level statistics and complexity
-• Per-language detailed analysis
-• Average metrics and ratios
+ANALYSIS TAB SUB-MODES (when Metrics View is active):
+• Overview: Project summary with key statistics and quality scores
+• Detailed: Comprehensive metrics breakdown by language and directory
+• Quality: Code quality assessment with technical debt analysis
+• Dependencies: Import relationships and circular dependency detection
 
-MODE 3 - QUALITY ASSESSMENT:
-• Quality score breakdown by category
-• Technical debt analysis with recommendations
-• Maintainability insights by language
-• Code quality best practices suggestions
-
-MODE 4 - DEPENDENCY GRAPH:
-• Internal dependency relationships
-• External library dependencies  
-• Standard library usage patterns
-• Circular dependency detection and warnings
-
-Each mode provides scrollable content with detailed insights.`,
+The Analysis tab automatically shows metrics when you have analysis data available. Use the tab navigation (Tab/Shift+Tab) to switch between Explorer, Analysis, Configuration, and Help tabs.`,
 			KeyBindings: []KeyBinding{
-				{[]string{"1"}, "Overview mode - project summary", "Analysis Tab"},
-				{[]string{"2"}, "Detailed mode - comprehensive metrics", "Analysis Tab"},
-				{[]string{"3"}, "Quality mode - quality assessment", "Analysis Tab"},
-				{[]string{"4"}, "Dependency mode - dependency analysis", "Analysis Tab"},
-				{[]string{"↑", "↓"}, "Scroll within metrics view", "Metrics Active"},
+				{[]string{"Tab", "Shift+Tab"}, "Switch between main tabs", "Global"},
+				{[]string{"1", "2", "3", "4"}, "Jump directly to specific tabs", "Global"},
+				{[]string{"m"}, "Toggle detailed metrics view", "Analysis Tab"},
+				{[]string{"s"}, "Toggle summary/insights view", "Analysis Tab"},
+				{[]string{"e"}, "Export current analysis results", "Analysis Tab"},
+				{[]string{"↑", "↓"}, "Scroll within analysis content", "Analysis Tab"},
 			},
 		},
 		{
@@ -392,7 +386,7 @@ func (h *HelpViewModel) Render(width, height int) string {
 func (h *HelpViewModel) renderSectionTabs() string {
 	var tabs []string
 
-	for i, _ := range h.sections {
+	for i := range h.sections {
 		var style lipgloss.Style
 		if i == h.currentSection {
 			style = lipgloss.NewStyle().

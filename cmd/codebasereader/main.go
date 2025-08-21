@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/tito-sala/codebasereaderv2/internal/core"
+	app "github.com/tito-sala/codebasereaderv2/internal/core"
 	"github.com/tito-sala/codebasereaderv2/internal/engine"
 )
 
@@ -13,7 +13,7 @@ func main() {
 
 	// Create application with default configuration
 	config := engine.DefaultConfig()
-	app := core.NewApplication(config)
+	app := app.NewApplication(config)
 
 	// Validate setup
 	if err := app.ValidateSetup(); err != nil {

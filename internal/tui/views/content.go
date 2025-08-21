@@ -49,6 +49,36 @@ func (m *ContentViewModel) Init() tea.Cmd {
 	return nil
 }
 
+// GetMetricsDisplay returns the metrics display (for testing)
+func (m *ContentViewModel) GetMetricsDisplay() *components.MetricsDisplay {
+	return m.metricsDisplay
+}
+
+// GetAnalysisData returns the analysis data (for testing)
+func (m *ContentViewModel) GetAnalysisData() *shared.AnalysisData {
+	return m.analysisData
+}
+
+// SetAnalysisData sets the analysis data (for testing)
+func (m *ContentViewModel) SetAnalysisData(data *shared.AnalysisData) {
+	m.analysisData = data
+}
+
+// ShowMetrics returns whether metrics are shown (for testing)
+func (m *ContentViewModel) ShowMetrics() bool {
+	return m.showMetrics
+}
+
+// SetShowMetrics sets whether metrics are shown (for testing)
+func (m *ContentViewModel) SetShowMetrics(show bool) {
+	m.showMetrics = show
+}
+
+// GetContent returns the current content (for testing)
+func (m *ContentViewModel) GetContent() string {
+	return m.content
+}
+
 // Update handles messages for the content view
 func (m *ContentViewModel) Update(msg tea.Msg) (*ContentViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -155,11 +185,6 @@ func (m *ContentViewModel) ClearAnalysis() {
 	m.scrollY = 0
 	m.showMetrics = false
 	m.showSummary = false
-}
-
-// ShowMetrics returns the current showMetrics state
-func (m *ContentViewModel) ShowMetrics() bool {
-	return m.showMetrics
 }
 
 // ShowSummary returns the current showSummary state
@@ -276,14 +301,6 @@ func (m *ContentViewModel) SetMetrics(metrics string) {
 func (m *ContentViewModel) SetSummary(summary string) {
 	if m.showSummary {
 		m.content = summary
-	}
-}
-
-// SetAnalysisData sets the analysis data for display
-func (m *ContentViewModel) SetAnalysisData(data *shared.AnalysisData) {
-	m.analysisData = data
-	if data != nil && data.ProjectAnalysis != nil {
-		m.UpdateContentFromAnalysis()
 	}
 }
 

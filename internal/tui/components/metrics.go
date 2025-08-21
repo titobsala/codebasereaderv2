@@ -45,6 +45,26 @@ func (m *MetricsDisplay) SetMode(mode MetricsDisplayMode) {
 	m.scrollY = 0
 }
 
+// GetMode returns the current display mode (for testing)
+func (m *MetricsDisplay) GetMode() MetricsDisplayMode {
+	return m.mode
+}
+
+// GetScrollY returns the current scroll position (for testing)
+func (m *MetricsDisplay) GetScrollY() int {
+	return m.scrollY
+}
+
+// SetHeight sets the height (for testing)
+func (m *MetricsDisplay) SetHeight(height int) {
+	m.height = height
+}
+
+// SetMaxScroll sets the max scroll position (for testing)
+func (m *MetricsDisplay) SetMaxScroll(maxScroll int) {
+	m.maxScroll = maxScroll
+}
+
 // SetFilter sets the language filter
 func (m *MetricsDisplay) SetFilter(lang string) {
 	m.filterLang = lang

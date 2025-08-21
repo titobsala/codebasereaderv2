@@ -4,77 +4,78 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tito-sala/codebasereaderv2/internal/tui/views"
 )
 
 func TestNewFileTreeModel(t *testing.T) {
-	model := NewFileTreeModel()
+	model := views.NewFileTreeModel()
 
-	if model.cursor != 0 {
+	if model.GetCursor() != 0 {
 		t.Error("Expected initial cursor position to be 0")
 	}
 
-	if model.selected == nil {
+	if model.GetSelected() == nil {
 		t.Error("Expected selected map to be initialized")
 	}
 
-	if model.expanded == nil {
+	if model.GetExpanded() == nil {
 		t.Error("Expected expanded map to be initialized")
 	}
 
-	if model.rootPath == "" {
+	if model.GetRootPath() == "" {
 		t.Error("Expected rootPath to be set")
 	}
 }
 
 func TestFileTreeNavigation(t *testing.T) {
-	model := NewFileTreeModel()
+	model := views.NewFileTreeModel()
 
 	// Add some test items
-	model.items = []FileTreeItem{
+	model.SetItems([]FileTreeItem{
 		{Name: "file1.go", Path: "/test/file1.go", IsDirectory: false, IsSupported: true},
 		{Name: "file2.py", Path: "/test/file2.py", IsDirectory: false, IsSupported: true},
 		{Name: "dir1", Path: "/test/dir1", IsDirectory: true, IsSupported: false},
-	}
+	})
 
 	// Test down navigation
 	updatedModel, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	if updatedModel.cursor != 1 {
-		t.Errorf("Expected cursor to be 1 after down, got %d", updatedModel.cursor)
+	if updatedModel.GetCursor() != 1 {
+		t.Errorf("Expected cursor to be 1 after down, got %d", updatedModel.GetCursor())
 	}
 
 	// Test up navigation
 	updatedModel, _ = updatedModel.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("k")})
-	if updatedModel.cursor != 0 {
-		t.Errorf("Expected cursor to be 0 after up, got %d", updatedModel.cursor)
+	if updatedModel.GetCursor() != 0 {
+		t.Errorf("Expected cursor to be 0 after up, got %d", updatedModel.GetCursor())
 	}
 }
 
 func TestFileSelection(t *testing.T) {
-	model := NewFileTreeModel()
+	model := views.NewFileTreeModel()
 
 	// Add a test file
-	model.items = []FileTreeItem{
+	model.SetItems([]FileTreeItem{
 		{Name: "test.go", Path: "/test/test.go", IsDirectory: false, IsSupported: true},
-	}
+	})
 
 	// Test space key for selection - create a proper KeyMsg that will return "space" from String()
 	keyMsg := tea.KeyMsg{Type: tea.KeySpace, Runes: []rune(" ")}
 	updatedModel, _ := model.Update(keyMsg)
 
-	if !updatedModel.selected[0] {
+	if !updatedModel.GetSelected()[0] {
 		t.Error("Expected file to be selected after space key")
 	}
 
 	// Test space key again to deselect
 	updatedModel, _ = updatedModel.Update(keyMsg)
 
-	if updatedModel.selected[0] {
+	if updatedModel.GetSelected()[0] {
 		t.Error("Expected file to be deselected after second space key")
 	}
 }
 
 func TestIsFileSupported(t *testing.T) {
-	model := NewFileTreeModel()
+	model := views.NewFileTreeModel()
 
 	testCases := []struct {
 		filename string
@@ -90,9 +91,9 @@ func TestIsFileSupported(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		result := model.isFileSupported(tc.filename)
+		result := model.IsFileSupported(tc.filename)
 		if result != tc.expected {
-			t.Errorf("isFileSupported(%s) = %v, expected %v", tc.filename, result, tc.expected)
+			t.Errorf("IsFileSupported(%s) = %v, expected %v", tc.filename, result, tc.expected)
 		}
 	}
 }
@@ -119,12 +120,12 @@ func TestFormatFileSize(t *testing.T) {
 }
 
 func TestFileTreeView(t *testing.T) {
-	model := NewFileTreeModel()
+	model := views.NewFileTreeModel()
 
 	// Add some test items
-	model.items = []FileTreeItem{
+	model.SetItems([]FileTreeItem{
 		{Name: "test.go", Path: "/test/test.go", IsDirectory: false, IsSupported: true, Size: 1024},
-	}
+	})
 
 	// Test that View doesn't panic
 	view := model.View(80, 24)
@@ -134,7 +135,7 @@ func TestFileTreeView(t *testing.T) {
 }
 
 func TestGetFileIcon(t *testing.T) {
-	model := NewFileTreeModel()
+	model := views.NewFileTreeModel()
 
 	testCases := []struct {
 		item     FileTreeItem
@@ -148,9 +149,9 @@ func TestGetFileIcon(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		result := model.getFileIcon(tc.item)
+		result := model.GetFileIcon(tc.item)
 		if result != tc.expected {
-			t.Errorf("getFileIcon(%s) = %s, expected %s", tc.item.Name, result, tc.expected)
+			t.Errorf("GetFileIcon(%s) = %s, expected %s", tc.item.Name, result, tc.expected)
 		}
 	}
 }

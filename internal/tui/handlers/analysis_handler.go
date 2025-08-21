@@ -47,7 +47,7 @@ func (ah *AnalysisHandler) runAnalysisWithProgress(path string) tea.Cmd {
 	return func() tea.Msg {
 		// For now, return a placeholder message indicating analysis would run here
 		// The full implementation would need access to the analysis engine
-		return core.ErrorMsg{Error: fmt.Errorf("analysis handler refactoring incomplete - needs engine access")}
+		return core.ErrorMsg{Error: fmt.Errorf("analysis handler refactoring incomplete for path %s - needs engine access", path)}
 	}
 }
 
