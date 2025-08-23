@@ -339,7 +339,7 @@ func (m *ContentViewModel) formatAnalysisOverview() string {
 	header := components.HeaderStyle.Render("📊 Codebase Analysis Results")
 
 	b.WriteString(header + "\n")
-	b.WriteString(strings.Repeat("═", 50) + "\n\n")
+	b.WriteString(strings.Repeat("=", 50) + "\n\n")
 
 	// Project summary with better formatting
 	b.WriteString(components.SectionStyle.Render("📋 Project Summary") + "\n")

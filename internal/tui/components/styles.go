@@ -95,7 +95,7 @@ var (
 			MarginBottom(1).
 			Padding(0, 1).
 			Border(lipgloss.Border{
-			Bottom: "═",
+			Bottom: "=",
 		}).
 		BorderForeground(PrimaryBlue)
 
@@ -107,7 +107,7 @@ var (
 			MarginBottom(1).
 			Padding(0, 1).
 			Border(lipgloss.Border{
-			Left: "▌",
+			Left: "|",
 		}).
 		BorderForeground(PrimaryBlue)
 
@@ -177,7 +177,7 @@ var (
 			MarginTop(1).
 			Padding(0, 1).
 			Border(lipgloss.Border{
-			Top: "─",
+			Top: "-",
 		}).
 		BorderForeground(NeutralDark)
 
@@ -212,7 +212,7 @@ var (
 			Background(lipgloss.Color("#2D1B00")).
 			Padding(0, 1).
 			Border(lipgloss.Border{
-			Left: "▌",
+			Left: "|",
 		}).
 		BorderForeground(WarningOrange)
 

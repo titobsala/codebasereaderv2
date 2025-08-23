@@ -48,236 +48,138 @@ func NewHelpViewModel() *HelpViewModel {
 func createHelpSections() []HelpSection {
 	return []HelpSection{
 		{
-			Title: "Overview",
-			Icon:  "📖",
+			Title: "Getting Started",
+			Icon:  "🚀",
 			Content: `Welcome to CodebaseReader v2 - A powerful TUI for codebase analysis!
 
-This tool provides comprehensive static analysis of your code projects with:
-• Language-specific metrics and complexity analysis
-• Dependency graph visualization and analysis  
-• Code quality scoring and maintainability insights
-• Interactive file tree navigation and content viewing
-• Multiple visualization modes for different analysis aspects
-• Export functionality for analysis results
+QUICK START:
+• Navigate files with ↑↓ arrow keys or j/k
+• Press 'a' on any directory to analyze it
+• Use Tab to switch between main views
+• Press ? to toggle this help system
 
-Navigate through this help using the arrow keys or number shortcuts (1-8).`,
+MAIN INTERFACE:
+The interface has 4 main tabs accessible via Tab/Shift+Tab:
+• Explorer (1): File tree and directory navigation
+• Analysis (2): Metrics, quality scores, and analysis results  
+• Configuration (3): Settings and preferences
+• Help (4): This help system
+
+SUPPORTED LANGUAGES:
+• Go - Full AST analysis with complexity metrics
+• Python - Function/class detection and imports
+• More languages coming soon!`,
 			KeyBindings: []KeyBinding{
-				{[]string{"←", "→", "h", "l"}, "Navigate help sections", "Help View"},
-				{[]string{"1-8"}, "Jump to specific help section", "Help View"},
+				{[]string{"Tab", "Shift+Tab"}, "Switch between main tabs", "Global"},
+				{[]string{"1", "2", "3", "4"}, "Jump directly to specific tab", "Global"},
 				{[]string{"?"}, "Toggle help on/off", "Global"},
-				{[]string{"Esc"}, "Return to previous view", "Help View"},
+				{[]string{"q", "Ctrl+c"}, "Quit application", "Global"},
 			},
 		},
 		{
-			Title: "Navigation",
+			Title: "Navigation & File Operations", 
 			Icon:  "🧭",
-			Content: `Master the navigation system to efficiently browse your codebase:
-
-MODERN TABBED INTERFACE:
-The interface is organized into four main tabs with enhanced visual indicators:
-• 🔥 Explorer Tab: File tree and directory navigation (default view)
-• 📊 Analysis Tab: Metrics, quality scores, and analysis results
-• ⚙️ Configuration Tab: Settings and preferences
-• ❓ Help Tab: This comprehensive help system
-
-ACTIVE TAB INDICATORS:
-• Active tabs show with fire emojis (🔥) and purple background
-• Adjacent tabs have subtle background highlighting
-• Tab borders provide visual separation and feedback
-
-Use the tabbed interface, keyboard shortcuts, or number keys to switch between views seamlessly.`,
-			KeyBindings: []KeyBinding{
-				{[]string{"↑", "↓", "k", "j"}, "Move up/down in lists and content", "All Views"},
-				{[]string{"←", "→", "h", "l"}, "Navigate horizontally, collapse/expand", "File Tree"},
-				{[]string{"Enter", "Space"}, "Select item or toggle expansion", "File Tree"},
-				{[]string{"Tab", "Shift+Tab"}, "Switch between main tabs", "Global"},
-				{[]string{"1", "2", "3", "4"}, "Jump directly to Explorer/Analysis/Config/Help tabs", "Global"},
-				{[]string{"PgUp", "PgDn"}, "Scroll content by page", "Content Areas"},
-				{[]string{"Home", "End", "g", "G"}, "Jump to start/end", "Content Areas"},
-				{[]string{"Ctrl+u", "Ctrl+d"}, "Scroll half page up/down", "Content Areas"},
-			},
-		},
-		{
-			Title: "Analysis Features",
-			Icon:  "📊",
-			Content: `Comprehensive codebase analysis with multiple visualization modes:
-
-DEPENDENCY ANALYSIS:
-• Internal Dependencies: Project-internal imports and relationships
-• External Dependencies: Third-party libraries and frameworks  
-• Standard Library: Language standard library usage
-• Circular Dependencies: Detected circular import issues
-
-METRICS ANALYSIS:
-• Lines of Code: Total, code lines, comments, blank lines
-• Complexity Metrics: Cyclomatic complexity, maintainability index
-• Function/Class Counts: Detailed breakdown by language
-• Technical Debt: Calculated debt score and recommendations
-
-QUALITY SCORING:
-• Overall Quality Grade: A-F grading system
-• Maintainability Score: Code maintainability percentage
-• Documentation Ratio: Comment-to-code ratio analysis
-• Test Coverage: Test file detection and coverage metrics`,
-			KeyBindings: []KeyBinding{
-				{[]string{"a"}, "Analyze selected directory", "File Tree"},
-				{[]string{"r"}, "Refresh analysis", "Global"},
-				{[]string{"c"}, "Clear current analysis", "Global"},
-				{[]string{"m"}, "Toggle metrics view", "Content View"},
-				{[]string{"s"}, "Toggle summary view", "Content View"},
-			},
-		},
-		{
-			Title: "Analysis Tab Features",
-			Icon:  "📊",
-			Content: `The Analysis tab provides comprehensive project insights with multiple visualization modes:
-
-PRIMARY ANALYSIS MODES (accessible via content view toggles):
-• Metrics View (m): Detailed code metrics, complexity analysis, and statistics
-• Summary View (s): High-level project overview with key insights
-• Export (e): Generate reports in JSON, CSV, and other formats
-
-ANALYSIS TAB SUB-MODES (when Metrics View is active):
-• Overview: Project summary with key statistics and quality scores
-• Detailed: Comprehensive metrics breakdown by language and directory
-• Quality: Code quality assessment with technical debt analysis
-• Dependencies: Import relationships and circular dependency detection
-
-The Analysis tab automatically shows metrics when you have analysis data available. Use the tab navigation (Tab/Shift+Tab) to switch between Explorer, Analysis, Configuration, and Help tabs.`,
-			KeyBindings: []KeyBinding{
-				{[]string{"Tab", "Shift+Tab"}, "Switch between main tabs", "Global"},
-				{[]string{"1", "2", "3", "4"}, "Jump directly to specific tabs", "Global"},
-				{[]string{"m"}, "Toggle detailed metrics view", "Analysis Tab"},
-				{[]string{"s"}, "Toggle summary/insights view", "Analysis Tab"},
-				{[]string{"e"}, "Export current analysis results", "Analysis Tab"},
-				{[]string{"↑", "↓"}, "Scroll within analysis content", "Analysis Tab"},
-			},
-		},
-		{
-			Title: "File Operations",
-			Icon:  "📁",
-			Content: `Efficient file and directory operations:
+			Content: `Navigate efficiently through your codebase:
 
 FILE TREE NAVIGATION:
-• Hierarchical display of project structure
-• Language-specific file icons and indicators
-• Size indicators for files and directories
-• Support for hidden files (configurable)
+• Use ↑↓ or j/k to move between files and directories
+• Press Enter to open files or expand/collapse directories  
+• Use ←→ or h/l to collapse/expand directories
+• Press Space to toggle directory expansion
 
-FILE CONTENT VIEWING:
-• Syntax-aware content display
-• Line numbers and content formatting
-• Scrollable content with navigation indicators
-• File metadata and statistics
+FILE OPERATIONS:
+• View file contents in the content area
+• Files show syntax highlighting and line numbers
+• Navigate large files with PgUp/PgDn or scroll arrows
+• Press 'a' on directories to analyze them
 
-DIRECTORY OPERATIONS:
-• Expand/collapse directory trees
-• Recursive analysis of subdirectories
-• Selective analysis of specific directories
-• Project root detection and management`,
+DIRECTORY ANALYSIS:
+• Select any directory and press 'a' to analyze
+• Analysis processes all supported files recursively
+• Results appear in the Analysis tab automatically
+• Use 'c' to clear analysis results when done`,
 			KeyBindings: []KeyBinding{
-				{[]string{"Enter"}, "Open file or expand directory", "File Tree"},
-				{[]string{"Space"}, "Toggle directory expansion", "File Tree"},
-				{[]string{"←", "h"}, "Collapse directory or go up", "File Tree"},
-				{[]string{"→", "l"}, "Expand directory or go down", "File Tree"},
-				{[]string{"Ctrl+a"}, "Select all in current directory", "File Tree"},
+				{[]string{"↑", "↓", "j", "k"}, "Navigate up/down in file tree", "Explorer"},
+				{[]string{"←", "→", "h", "l"}, "Collapse/expand directories", "Explorer"}, 
+				{[]string{"Enter"}, "Open file or toggle directory", "Explorer"},
+				{[]string{"Space"}, "Toggle directory expansion", "Explorer"},
+				{[]string{"a"}, "Analyze selected directory", "Explorer"},
+				{[]string{"r"}, "Refresh file tree", "Explorer"},
+				{[]string{"PgUp", "PgDn"}, "Scroll content by page", "Content View"},
 			},
 		},
 		{
-			Title: "Configuration",
+			Title: "Analysis & Metrics",
+			Icon:  "📊", 
+			Content: `Comprehensive codebase analysis and metrics:
+
+HOW TO ANALYZE:
+• Navigate to any directory in the Explorer tab
+• Press 'a' to start analysis of that directory
+• Analysis runs in background with progress indicator
+• Results automatically appear in the Analysis tab
+
+WHAT YOU GET:
+• Lines of Code: Total lines, code lines, comments, blank lines
+• Complexity Metrics: Cyclomatic complexity for functions
+• Function/Class Counts: Detailed breakdown by language  
+• Quality Scoring: Overall project quality assessment
+• Dependency Analysis: Import relationships and circular dependencies
+
+VIEWING RESULTS:
+• Switch to Analysis tab (Tab or press '2') to see results
+• Use 'm' to toggle between detailed metrics and overview
+• Use 's' to toggle summary view with key insights
+• Scroll with ↑↓ to navigate through large result sets
+
+ANALYSIS TIPS:
+• Start from project root for complete dependency analysis
+• Large projects may take longer - watch the progress indicator
+• Use 'c' to clear analysis when switching between projects`,
+			KeyBindings: []KeyBinding{
+				{[]string{"a"}, "Analyze selected directory", "Explorer"},
+				{[]string{"2"}, "Switch to Analysis tab", "Global"},
+				{[]string{"m"}, "Toggle metrics/overview view", "Analysis"},
+				{[]string{"s"}, "Toggle summary view", "Analysis"}, 
+				{[]string{"c"}, "Clear current analysis", "Global"},
+				{[]string{"r"}, "Refresh/re-run analysis", "Global"},
+			},
+		},
+		{
+			Title: "Configuration & Tips",
 			Icon:  "⚙️",
-			Content: `Customize the application to your preferences:
+			Content: `Configuration and productivity tips:
 
-DISPLAY SETTINGS:
-• Color scheme selection (default, dark, light themes)
-• Hidden file visibility toggle
-• Language-specific syntax highlighting
-• Progress bar and animation preferences
+CONFIGURATION TAB:
+• Switch to Configuration tab (press '3') for settings
+• Adjust worker thread count for better performance
+• Set file exclusion patterns for faster analysis
+• Configure analysis timeout for large projects
 
-ANALYSIS SETTINGS:
-• Worker thread configuration for performance
-• File type inclusion/exclusion patterns
-• Analysis depth and recursion limits
-• Timeout settings for large projects
-
-EXPORT SETTINGS:
-• Output format selection (JSON, CSV, XML)
-• Report detail level configuration
-• Custom template support
-• Automatic export location settings
-
-All configuration changes take effect immediately without restart.`,
-			KeyBindings: []KeyBinding{
-				{[]string{"Enter"}, "Modify configuration option", "Config View"},
-				{[]string{"Space"}, "Toggle boolean settings", "Config View"},
-				{[]string{"→", "←"}, "Adjust numeric values", "Config View"},
-				{[]string{"r"}, "Reset to defaults", "Config View"},
-			},
-		},
-		{
-			Title: "Export & Reports",
-			Icon:  "📤",
-			Content: `Generate and export comprehensive analysis reports:
-
-EXPORT FORMATS:
-• JSON: Machine-readable structured data
-• CSV: Spreadsheet-compatible tabular data
-• XML: Structured markup for integration
-• HTML: Web-viewable formatted reports
-
-REPORT CONTENTS:
-• Executive summary with key metrics
-• Detailed analysis by language and directory
-• Quality assessment with recommendations
-• Dependency graph with relationships
-• Historical comparison (when available)
-
-EXPORT OPTIONS:
-• Full report with all metrics
-• Summary report with key insights only
-• Custom report with selected sections
-• Raw data export for further analysis
-
-Reports are automatically timestamped and saved to your specified output directory.`,
-			KeyBindings: []KeyBinding{
-				{[]string{"e"}, "Export current analysis", "Global"},
-				{[]string{"Ctrl+e"}, "Export with custom options", "Global"},
-				{[]string{"Shift+e"}, "Quick export summary", "Global"},
-			},
-		},
-		{
-			Title: "Tips & Shortcuts",
-			Icon:  "💡",
-			Content: `Advanced tips and hidden features to boost your productivity:
-
-PRODUCTIVITY TIPS:
-• Use number keys (1-4) to quickly switch between analysis modes
-• Hold Shift while navigating to select multiple items
-• Use Ctrl+C at any time to safely quit the application
-• Press 'r' to refresh when file system changes are detected
+PRODUCTIVITY SHORTCUTS:
+• Use number keys 1-4 to jump between tabs quickly
+• Press 'r' to refresh when files change
+• Use Ctrl+C to safely quit at any time
+• Navigate with vim-style keys (hjkl) for speed
 
 ANALYSIS BEST PRACTICES:
-• Start analysis from the project root for complete dependency graphs
-• Use different metrics modes to understand different aspects of code quality
-• Pay attention to circular dependencies as they indicate design issues
-• Monitor technical debt scores to guide refactoring efforts
+• Start analysis from project root for complete results
+• Watch for circular dependencies - they indicate design issues  
+• Use different view modes (m/s) to understand different aspects
+• Clear analysis (c) when switching between projects
 
-PERFORMANCE OPTIMIZATION:
-• Exclude test directories for faster analysis when not needed
-• Use file patterns to focus analysis on specific file types
-• Adjust worker threads based on your system capabilities
-• Consider using summary exports for large projects
-
-KEYBOARD MASTERY:
-• Learn the Tab navigation for seamless view switching
-• Use PgUp/PgDn for efficient content scrolling
-• Master the vim-style navigation (hjkl) for speed
-• Combine Ctrl with navigation keys for faster movement`,
+PERFORMANCE TIPS:
+• Exclude test directories if not needed for faster analysis
+• Larger projects will take longer - be patient with progress
+• The tool handles concurrency automatically
+• Results are cached until you clear them`,
 			KeyBindings: []KeyBinding{
-				{[]string{"F1"}, "Show context-sensitive quick help", "Global"},
-				{[]string{"Ctrl+?"}, "Show all keyboard shortcuts", "Global"},
-				{[]string{"F12"}, "Toggle debug information", "Global"},
-				{[]string{"Ctrl+r"}, "Force refresh all views", "Global"},
+				{[]string{"3"}, "Switch to Configuration tab", "Global"},
+				{[]string{"1", "2", "3", "4"}, "Jump between tabs quickly", "Global"},
+				{[]string{"r"}, "Refresh current view", "Global"},
+				{[]string{"Ctrl+r", "F5"}, "Force refresh all views", "Global"},
+				{[]string{"←", "→", "h", "l"}, "Navigate help sections", "Help"},
+				{[]string{"Esc"}, "Exit help and return to Explorer", "Help"},
 			},
 		},
 	}
@@ -314,26 +216,6 @@ func (h *HelpViewModel) Update(key string) {
 			h.currentSection = 3
 			h.scrollY = 0
 		}
-	case "5":
-		if len(h.sections) > 4 {
-			h.currentSection = 4
-			h.scrollY = 0
-		}
-	case "6":
-		if len(h.sections) > 5 {
-			h.currentSection = 5
-			h.scrollY = 0
-		}
-	case "7":
-		if len(h.sections) > 6 {
-			h.currentSection = 6
-			h.scrollY = 0
-		}
-	case "8":
-		if len(h.sections) > 7 {
-			h.currentSection = 7
-			h.scrollY = 0
-		}
 	case "up", "k":
 		if h.scrollY > 0 {
 			h.scrollY--
@@ -362,14 +244,12 @@ func (h *HelpViewModel) Render(width, height int) string {
 
 	// Header with current section indicator
 	currentSection := h.sections[h.currentSection]
-	header := components.CreateCard(
-		fmt.Sprintf("%s %s (%d/%d)", currentSection.Icon, currentSection.Title, h.currentSection+1, len(h.sections)),
-		"",
-	)
-	b.WriteString(header + "\n")
+	headerText := fmt.Sprintf("%s %s (%d/%d)", currentSection.Icon, currentSection.Title, h.currentSection+1, len(h.sections))
+	header := components.HeaderStyle.Render(headerText)
+	b.WriteString(header + "\n\n")
 
 	// Section navigation tabs
-	b.WriteString(h.renderSectionTabs() + "\n")
+	b.WriteString(h.renderSectionTabs() + "\n\n")
 
 	// Section content
 	contentArea := h.renderSectionContent(currentSection)
@@ -393,16 +273,11 @@ func (h *HelpViewModel) renderSectionTabs() string {
 				Foreground(components.NeutralWhite).
 				Background(components.PrimaryPurple).
 				Padding(0, 1).
-				Bold(true).
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(components.PrimaryBlue)
+				Bold(true)
 		} else {
 			style = lipgloss.NewStyle().
 				Foreground(components.NeutralMedium).
-				Background(components.NeutralDark).
-				Padding(0, 1).
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(components.NeutralDark)
+				Padding(0, 1)
 		}
 
 		tabText := fmt.Sprintf("%d", i+1)
@@ -418,31 +293,28 @@ func (h *HelpViewModel) renderSectionContent(section HelpSection) string {
 
 	// Content description
 	if section.Content != "" {
-		contentCard := components.CardStyle.Render(section.Content)
-		b.WriteString(contentCard + "\n")
+		b.WriteString(section.Content + "\n\n")
 	}
 
 	// Key bindings
 	if len(section.KeyBindings) > 0 {
-		b.WriteString(components.SectionStyle.Render("⌨️  Keyboard Shortcuts") + "\n")
+		b.WriteString("\n⌨️  Keyboard Shortcuts:\n")
 		for _, kb := range section.KeyBindings {
 			keyText := strings.Join(kb.Keys, ", ")
-			b.WriteString(fmt.Sprintf("  %s  %s\n",
-				components.CreateBadge(keyText, "info"),
-				kb.Description))
+			b.WriteString(fmt.Sprintf("  %s - %s", keyText, kb.Description))
 			if kb.Context != "" {
-				b.WriteString(fmt.Sprintf("    %s\n",
-					components.HelpStyle.Render("Context: "+kb.Context)))
+				b.WriteString(fmt.Sprintf(" (%s)", kb.Context))
 			}
+			b.WriteString("\n")
 		}
 		b.WriteString("\n")
 	}
 
 	// Tips
 	if len(section.Tips) > 0 {
-		b.WriteString(components.SectionStyle.Render("💡 Pro Tips") + "\n")
+		b.WriteString("💡 Pro Tips:\n")
 		for _, tip := range section.Tips {
-			b.WriteString(components.CreateHighlight(tip, "info") + "\n")
+			b.WriteString("  • " + tip + "\n")
 		}
 	}
 
@@ -451,7 +323,7 @@ func (h *HelpViewModel) renderSectionContent(section HelpSection) string {
 
 // renderFooter renders the help footer with navigation hints
 func (h *HelpViewModel) renderFooter() string {
-	navigation := "Navigate: ←→/hl (sections) • ↑↓/kj (scroll) • 1-8 (jump) • ? (close help)"
+	navigation := "Navigate: ←→/hl (sections) • ↑↓/kj (scroll) • 1-4 (jump) • ? (close help)"
 	return components.HelpStyle.
 		Align(lipgloss.Center).
 		Render(navigation)

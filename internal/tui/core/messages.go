@@ -9,16 +9,11 @@ import (
 
 // Message types for the TUI
 
-// FileSelectedMsg is sent when a file is selected
-type FileSelectedMsg struct {
-	FilePath string
-	Content  string
-}
+// FileSelectedMsg is an alias for shared.FileSelectedMsg
+type FileSelectedMsg = shared.FileSelectedMsg
 
-// DirectorySelectedMsg is sent when a directory is selected for analysis
-type DirectorySelectedMsg struct {
-	Path string
-}
+// DirectorySelectedMsg is an alias for shared.DirectorySelectedMsg
+type DirectorySelectedMsg = shared.DirectorySelectedMsg
 
 // AnalysisCompleteMsg is sent when analysis is complete
 type AnalysisCompleteMsg struct {
@@ -32,10 +27,8 @@ type EnhancedAnalysisCompleteMsg struct {
 	Summary          string
 }
 
-// ErrorMsg is sent when an error occurs
-type ErrorMsg struct {
-	Error error
-}
+// ErrorMsg is an alias for shared.ErrorMsg
+type ErrorMsg = shared.ErrorMsg
 
 // LoadingMsg is sent to update loading state
 type LoadingMsg struct {
@@ -77,13 +70,11 @@ type ToggleSummaryMsg struct{}
 // ClearAnalysisMsg is sent to clear analysis data
 type ClearAnalysisMsg struct{}
 
-// RefreshMsg is sent to refresh the file tree
-type RefreshMsg struct{}
+// RefreshMsg is an alias for shared.RefreshMsg  
+type RefreshMsg = shared.RefreshMsg
 
-// StatusUpdateMsg is sent to update status bar
-type StatusUpdateMsg struct {
-	Message string
-}
+// StatusUpdateMsg is an alias for shared.StatusUpdateMsg
+type StatusUpdateMsg = shared.StatusUpdateMsg
 
 // ProgressUpdateMsg is sent to update progress
 type ProgressUpdateMsg struct {
@@ -124,12 +115,8 @@ type MetricsSortMsg struct {
 	SortBy string
 }
 
-// ShowConfirmationMsg shows a confirmation dialog
-type ShowConfirmationMsg struct {
-	Message string
-	Action  string
-	Data    interface{}
-}
+// ShowConfirmationMsg is an alias for shared.ShowConfirmationMsg
+type ShowConfirmationMsg = shared.ShowConfirmationMsg
 
 // ConfirmationResponseMsg handles confirmation responses
 type ConfirmationResponseMsg struct {

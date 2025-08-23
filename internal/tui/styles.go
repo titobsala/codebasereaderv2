@@ -98,7 +98,7 @@ var (
 			MarginBottom(1).
 			Padding(0, 1).
 			Border(lipgloss.Border{
-			Bottom: "═",
+			Bottom: "=",
 		}).
 		BorderForeground(primaryBlue)
 
@@ -110,7 +110,7 @@ var (
 			MarginBottom(1).
 			Padding(0, 1).
 			Border(lipgloss.Border{
-			Left: "▌",
+			Left: "|",
 		}).
 		BorderForeground(primaryBlue)
 
@@ -185,7 +185,7 @@ var (
 			MarginTop(1).
 			Padding(0, 1).
 			Border(lipgloss.Border{
-			Top: "─",
+			Top: "-",
 		}).
 		BorderForeground(neutralDark)
 
@@ -227,7 +227,7 @@ var (
 			Background(lipgloss.Color("#2D1B00")).
 			Padding(0, 1).
 			Border(lipgloss.Border{
-			Left: "▌",
+			Left: "|",
 		}).
 		BorderForeground(warningOrange)
 
@@ -255,7 +255,7 @@ var (
 				Bold(true).
 				Padding(0, 1).
 				Border(lipgloss.Border{
-			Bottom: "═",
+			Bottom: "=",
 		}).
 		BorderForeground(primaryBlue)
 
@@ -264,7 +264,7 @@ var (
 			Foreground(neutralLight).
 			Padding(0, 1).
 			Border(lipgloss.Border{
-			Bottom: "─",
+			Bottom: "-",
 		}).
 		BorderForeground(neutralDark)
 
@@ -404,7 +404,7 @@ func createBadge(text string, badgeType string) string {
 // createSeparator creates a styled separator line
 func createSeparator(width int, char string) string {
 	if char == "" {
-		char = "─"
+		char = "-"
 	}
 
 	return separatorStyle.

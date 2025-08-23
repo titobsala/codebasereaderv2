@@ -136,6 +136,10 @@ func (m *FileTreeModel) Update(msg tea.Msg) (*FileTreeModel, tea.Cmd) {
 						}
 					}
 				}
+				// Fallback: if cursor is out of bounds but items are selected, analyze current directory
+				return m, func() tea.Msg {
+					return shared.DirectorySelectedMsg{Path: m.currentPath}
+				}
 			} else {
 				// No items selected - default to analyzing current directory
 				return m, func() tea.Msg {

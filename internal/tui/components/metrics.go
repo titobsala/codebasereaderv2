@@ -138,7 +138,7 @@ func (m *MetricsDisplay) renderOverview(analysis *metrics.EnhancedProjectAnalysi
 	var b strings.Builder
 
 	b.WriteString(HeaderStyle.Render("📊 Project Metrics Overview") + "\n")
-	b.WriteString(strings.Repeat("═", 60) + "\n\n")
+	b.WriteString(strings.Repeat("=", 60) + "\n\n")
 
 	// Project summary
 	b.WriteString(m.renderProjectSummary(analysis))
@@ -163,7 +163,7 @@ func (m *MetricsDisplay) renderDetailed(analysis *metrics.EnhancedProjectAnalysi
 	var b strings.Builder
 
 	b.WriteString(HeaderStyle.Render("📈 Detailed Metrics Analysis") + "\n")
-	b.WriteString(strings.Repeat("═", 60) + "\n\n")
+	b.WriteString(strings.Repeat("=", 60) + "\n\n")
 
 	// Project metrics
 	b.WriteString(m.renderProjectMetrics(analysis.ProjectMetrics))
@@ -184,7 +184,7 @@ func (m *MetricsDisplay) renderQuality(analysis *metrics.EnhancedProjectAnalysis
 	var b strings.Builder
 
 	b.WriteString(HeaderStyle.Render("🏆 Code Quality Analysis") + "\n")
-	b.WriteString(strings.Repeat("═", 60) + "\n\n")
+	b.WriteString(strings.Repeat("=", 60) + "\n\n")
 
 	// Quality score breakdown
 	b.WriteString(m.renderQualityBreakdown(analysis.QualityScore))
@@ -205,7 +205,7 @@ func (m *MetricsDisplay) renderDependencies(analysis *metrics.EnhancedProjectAna
 	var b strings.Builder
 
 	b.WriteString(HeaderStyle.Render("🔗 Dependency Analysis") + "\n")
-	b.WriteString(strings.Repeat("═", 60) + "\n\n")
+	b.WriteString(strings.Repeat("=", 60) + "\n\n")
 
 	// Dependency overview
 	b.WriteString(m.renderDependencyOverview(analysis.DependencyGraph))
