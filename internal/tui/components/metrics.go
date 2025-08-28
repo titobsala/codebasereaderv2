@@ -137,8 +137,7 @@ func (m *MetricsDisplay) renderNoData() string {
 func (m *MetricsDisplay) renderOverview(analysis *metrics.EnhancedProjectAnalysis) string {
 	var b strings.Builder
 
-	b.WriteString(HeaderStyle.Render("📊 Project Metrics Overview") + "\n")
-	b.WriteString(strings.Repeat("=", 60) + "\n\n")
+	b.WriteString(HeaderStyle.Render("📊 Analysis Results") + "\n\n")
 
 	// Project summary
 	b.WriteString(m.renderProjectSummary(analysis))
@@ -148,12 +147,16 @@ func (m *MetricsDisplay) renderOverview(analysis *metrics.EnhancedProjectAnalysi
 	b.WriteString(m.renderQualityScore(analysis.QualityScore))
 	b.WriteString("\n")
 
-	// Language breakdown
+	// Language breakdown with complexity details
 	b.WriteString(m.renderLanguageBreakdown(analysis.Languages))
 	b.WriteString("\n")
 
-	// Top metrics
-	b.WriteString(m.renderTopMetrics(analysis))
+	// Complexity metrics
+	b.WriteString(m.renderComplexityAnalysis(analysis))
+	b.WriteString("\n")
+
+	// Key insights
+	b.WriteString(m.renderKeyInsights(analysis))
 
 	return m.applyScrolling(b.String())
 }
@@ -241,7 +244,8 @@ func (m *MetricsDisplay) renderDependencies(analysis *metrics.EnhancedProjectAna
 func (m *MetricsDisplay) renderProjectSummary(analysis *metrics.EnhancedProjectAnalysis) string {
 	var b strings.Builder
 
-	b.WriteString(SectionStyle.Render("📋 Project Summary") + "\n")
+	// Simple section header without excessive styling
+	b.WriteString("📋 Project Summary\n")
 	b.WriteString(fmt.Sprintf("📁 Root Path: %s\n", analysis.RootPath))
 	b.WriteString(fmt.Sprintf("📄 Total Files: %s\n", tui.FormatNumber(analysis.TotalFiles)))
 	b.WriteString(fmt.Sprintf("📝 Total Lines: %s\n", tui.FormatNumber(analysis.TotalLines)))
@@ -254,7 +258,7 @@ func (m *MetricsDisplay) renderProjectSummary(analysis *metrics.EnhancedProjectA
 func (m *MetricsDisplay) renderQualityScore(score metrics.QualityScore) string {
 	var b strings.Builder
 
-	b.WriteString(SectionStyle.Render("🏆 Quality Score") + "\n")
+	b.WriteString("\n🏆 Quality Score\n")
 
 	// Use pre-cached grade style
 	gradeStyle := tui.GetGradeStyle(score.Grade)
@@ -274,7 +278,7 @@ func (m *MetricsDisplay) renderQualityScore(score metrics.QualityScore) string {
 func (m *MetricsDisplay) renderLanguageBreakdown(languages map[string]metrics.LanguageStats) string {
 	var b strings.Builder
 
-	b.WriteString(SectionStyle.Render("🌐 Language Breakdown") + "\n")
+	b.WriteString("\n🌐 Language Breakdown\n")
 
 	// Sort languages by line count
 	type langStat struct {
@@ -318,21 +322,86 @@ func (m *MetricsDisplay) renderLanguageBreakdown(languages map[string]metrics.La
 	return b.String()
 }
 
-// renderTopMetrics renders top metrics
-func (m *MetricsDisplay) renderTopMetrics(analysis *metrics.EnhancedProjectAnalysis) string {
+// renderComplexityAnalysis renders complexity metrics
+func (m *MetricsDisplay) renderComplexityAnalysis(analysis *metrics.EnhancedProjectAnalysis) string {
 	var b strings.Builder
 
-	SectionStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#87CEEB")).
-		Bold(true)
+	b.WriteString("\n🧮 Complexity Analysis\n")
+	
+	// Overall metrics
+	b.WriteString(fmt.Sprintf("📊 Total Complexity: %s\n", tui.FormatNumber(analysis.ProjectMetrics.TotalComplexity)))
+	b.WriteString(fmt.Sprintf("📈 Average Complexity: %.1f\n", analysis.ProjectMetrics.AverageComplexity))
+	b.WriteString(fmt.Sprintf("⚠️  Maximum Complexity: %s\n", tui.FormatNumber(analysis.ProjectMetrics.MaxComplexity)))
+	b.WriteString(fmt.Sprintf("🏗️  Maintainability Index: %.1f%%\n", analysis.ProjectMetrics.MaintainabilityIndex))
+	
+	// Technical debt
+	b.WriteString(fmt.Sprintf("🔧 Technical Debt: %.1f hours\n", analysis.ProjectMetrics.TechnicalDebt))
+	
+	// Code distribution
+	totalFuncs := 0
+	totalClasses := 0
+	for _, lang := range analysis.Languages {
+		totalFuncs += lang.FunctionCount
+		totalClasses += lang.ClassCount
+	}
+	
+	if totalFuncs > 0 {
+		avgComplexityPerFunc := float64(analysis.ProjectMetrics.TotalComplexity) / float64(totalFuncs)
+		b.WriteString(fmt.Sprintf("⚡ Functions: %s (avg %.1f complexity)\n", tui.FormatNumber(totalFuncs), avgComplexityPerFunc))
+	}
+	if totalClasses > 0 {
+		b.WriteString(fmt.Sprintf("🏛️  Classes: %s\n", tui.FormatNumber(totalClasses)))
+	}
 
-	b.WriteString(SectionStyle.Render("🔝 Key Metrics") + "\n")
-	b.WriteString(fmt.Sprintf("🧮 Total Complexity: %s\n", tui.FormatNumber(analysis.ProjectMetrics.TotalComplexity)))
-	b.WriteString(fmt.Sprintf("📊 Average Complexity: %.1f\n", analysis.ProjectMetrics.AverageComplexity))
-	b.WriteString(fmt.Sprintf("⚠️  Max Complexity: %s\n", tui.FormatNumber(analysis.ProjectMetrics.MaxComplexity)))
-	b.WriteString(fmt.Sprintf("🏗️  Technical Debt: %.1f\n", analysis.ProjectMetrics.TechnicalDebt))
-	b.WriteString(fmt.Sprintf("📚 Documentation Ratio: %.1f%%\n", analysis.ProjectMetrics.DocumentationRatio))
+	return b.String()
+}
 
+// renderKeyInsights provides actionable insights about the codebase
+func (m *MetricsDisplay) renderKeyInsights(analysis *metrics.EnhancedProjectAnalysis) string {
+	var b strings.Builder
+	
+	b.WriteString("\n💡 Key Insights\n")
+	
+	// Analyze quality score for insights
+	score := analysis.QualityScore.Overall
+	if score >= 90 {
+		b.WriteString("✅ Excellent code quality - well maintained project\n")
+	} else if score >= 75 {
+		b.WriteString("👍 Good code quality with room for improvement\n")
+	} else if score >= 60 {
+		b.WriteString("⚠️  Moderate quality - consider refactoring high complexity areas\n")
+	} else {
+		b.WriteString("🚨 Low quality score - significant technical debt present\n")
+	}
+	
+	// Complexity insights
+	if analysis.ProjectMetrics.AverageComplexity > 10 {
+		b.WriteString("🔥 High average complexity - consider breaking down complex functions\n")
+	} else if analysis.ProjectMetrics.AverageComplexity > 5 {
+		b.WriteString("📊 Moderate complexity - monitor for hotspots\n")
+	} else {
+		b.WriteString("✨ Low complexity - well-structured and maintainable code\n")
+	}
+	
+	// Language diversity
+	langCount := len(analysis.Languages)
+	if langCount == 1 {
+		b.WriteString("🎯 Single language project - consistent tooling and practices\n")
+	} else if langCount <= 3 {
+		b.WriteString("🌐 Multi-language project - ensure consistent quality across languages\n")
+	} else {
+		b.WriteString("🔀 High language diversity - consider consolidation for maintainability\n")
+	}
+	
+	// Size assessment
+	if analysis.TotalLines > 100000 {
+		b.WriteString("🏢 Large codebase - consider modularization strategies\n")
+	} else if analysis.TotalLines > 10000 {
+		b.WriteString("🏗️  Medium-sized project - good balance of features and complexity\n")
+	} else {
+		b.WriteString("🏠 Small codebase - easy to navigate and understand\n")
+	}
+	
 	return b.String()
 }
 

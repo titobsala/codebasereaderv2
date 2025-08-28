@@ -152,3 +152,6 @@ Each supported language will have its own parser that conforms to a standard **G
   1.  Add more output formats (e.g., Mermaid diagrams).
   2.  Refine performance and add robust error handling.
   3.  Set up a build pipeline (e.g., GitHub Actions) to compile and release the single binary for different operating systems.
+
+
+Add dependency analysis and file breakdown
