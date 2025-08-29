@@ -32,6 +32,7 @@ func (a *Aggregator) AggregateProjectMetrics(results []*parser.AnalysisResult, r
 		DependencyGraph: DependencyGraph{},
 		QualityScore:    QualityScore{},
 	}
+	
 	// Calculate project-level metrics
 	a.calculateProjectMetrics(analysis)
 
@@ -54,7 +55,12 @@ func (a *Aggregator) calculateProjectMetrics(analysis *EnhancedProjectAnalysis) 
 	var totalCodeLines, totalCommentLines int
 	var functionsWithDocs, totalFunctions int
 
-	fileResults := analysis.FileResults.([]*parser.AnalysisResult)
+	// Safe type assertion with check
+	fileResults, ok := analysis.FileResults.([]*parser.AnalysisResult)
+	if !ok {
+		// Handle the case where FileResults is not the expected type
+		return
+	}
 	for _, result := range fileResults {
 		totalComplexity += result.CyclomaticComplexity
 		totalMaintainability += result.MaintainabilityIndex
@@ -126,7 +132,11 @@ func (a *Aggregator) calculateProjectMetrics(analysis *EnhancedProjectAnalysis) 
 func (a *Aggregator) calculateDirectoryStats(analysis *EnhancedProjectAnalysis) {
 	dirStats := make(map[string]*DirectoryStats)
 
-	fileResults := analysis.FileResults.([]*parser.AnalysisResult)
+	// Safe type assertion with check
+	fileResults, ok := analysis.FileResults.([]*parser.AnalysisResult)
+	if !ok {
+		return
+	}
 	for _, result := range fileResults {
 		dir := filepath.Dir(result.FilePath)
 
@@ -198,7 +208,11 @@ func (a *Aggregator) analyzeDependencyGraph(analysis *EnhancedProjectAnalysis) {
 	allDeps := make(map[string]map[string]bool)
 
 	// Collect all dependencies
-	fileResults := analysis.FileResults.([]*parser.AnalysisResult)
+	// Safe type assertion with check
+	fileResults, ok := analysis.FileResults.([]*parser.AnalysisResult)
+	if !ok {
+		return
+	}
 	for _, result := range fileResults {
 		fileDeps := make(map[string]bool)
 
@@ -246,15 +260,22 @@ func (a *Aggregator) analyzeDependencyGraph(analysis *EnhancedProjectAnalysis) {
 
 // detectCircularDependencies detects circular dependency chains
 func (a *Aggregator) detectCircularDependencies(deps map[string][]string) [][]string {
-	// Simplified circular dependency detection
-	// In a real implementation, this would use graph algorithms like DFS
+	// Simplified circular dependency detection with safety limits
 	var circular [][]string
-
+	
+	// Safety limit to prevent infinite loops
+	const maxDepth = 100
+	
 	visited := make(map[string]bool)
 	recursionStack := make(map[string]bool)
 
-	var dfs func(string, []string) bool
-	dfs = func(node string, path []string) bool {
+	var dfs func(string, []string, int) bool
+	dfs = func(node string, path []string, depth int) bool {
+		// Safety check for maximum depth
+		if depth > maxDepth {
+			return false
+		}
+		
 		if recursionStack[node] {
 			// Found a cycle, extract the cycle
 			cycleStart := -1
@@ -264,8 +285,10 @@ func (a *Aggregator) detectCircularDependencies(deps map[string][]string) [][]st
 					break
 				}
 			}
-			if cycleStart >= 0 {
-				cycle := append(path[cycleStart:], node)
+			if cycleStart >= 0 && cycleStart < len(path) {
+				cycle := make([]string, len(path)-cycleStart+1)
+				copy(cycle, path[cycleStart:])
+				cycle[len(cycle)-1] = node
 				circular = append(circular, cycle)
 			}
 			return true
@@ -277,11 +300,16 @@ func (a *Aggregator) detectCircularDependencies(deps map[string][]string) [][]st
 
 		visited[node] = true
 		recursionStack[node] = true
-		path = append(path, node)
+		newPath := make([]string, len(path)+1)
+		copy(newPath, path)
+		newPath[len(path)] = node
 
-		for _, dep := range deps[node] {
-			if dfs(dep, path) {
-				return true
+		// Only process dependencies that exist in our graph
+		if nodeDeps, exists := deps[node]; exists {
+			for _, dep := range nodeDeps {
+				if dfs(dep, newPath, depth+1) {
+					break // Stop after finding first cycle to prevent excessive processing
+				}
 			}
 		}
 
@@ -289,10 +317,18 @@ func (a *Aggregator) detectCircularDependencies(deps map[string][]string) [][]st
 		return false
 	}
 
+	// Process each node with safety limits
+	processedCount := 0
+	const maxNodes = 1000
+	
 	for node := range deps {
-		if !visited[node] {
-			dfs(node, []string{})
+		if processedCount >= maxNodes {
+			break // Safety limit on number of nodes processed
 		}
+		if !visited[node] {
+			dfs(node, []string{}, 0)
+		}
+		processedCount++
 	}
 
 	return circular
@@ -301,32 +337,49 @@ func (a *Aggregator) detectCircularDependencies(deps map[string][]string) [][]st
 // calculateDependencyDepth calculates the maximum dependency depth
 func (a *Aggregator) calculateDependencyDepth(deps map[string][]string) int {
 	maxDepth := 0
+	const maxAllowedDepth = 50 // Safety limit
 
-	var calculateDepth func(string, map[string]bool) int
-	calculateDepth = func(node string, visited map[string]bool) int {
+	var calculateDepth func(string, map[string]bool, int) int
+	calculateDepth = func(node string, visited map[string]bool, currentDepth int) int {
+		// Safety checks
+		if currentDepth > maxAllowedDepth {
+			return currentDepth
+		}
+		
 		if visited[node] {
-			return 0 // Avoid infinite recursion
+			return currentDepth // Avoid infinite recursion
 		}
 
 		visited[node] = true
-		depth := 0
+		depth := currentDepth
 
-		for _, dep := range deps[node] {
-			depDepth := calculateDepth(dep, visited)
-			if depDepth > depth {
-				depth = depDepth
+		// Only process if node exists in deps
+		if nodeDeps, exists := deps[node]; exists {
+			for _, dep := range nodeDeps {
+				depDepth := calculateDepth(dep, visited, currentDepth+1)
+				if depDepth > depth {
+					depth = depDepth
+				}
 			}
 		}
 
 		delete(visited, node)
-		return depth + 1
+		return depth
 	}
 
+	// Process with safety limits
+	processedCount := 0
+	const maxNodes = 1000
+	
 	for node := range deps {
-		depth := calculateDepth(node, make(map[string]bool))
+		if processedCount >= maxNodes {
+			break
+		}
+		depth := calculateDepth(node, make(map[string]bool), 0)
 		if depth > maxDepth {
 			maxDepth = depth
 		}
+		processedCount++
 	}
 
 	return maxDepth

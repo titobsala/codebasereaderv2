@@ -102,12 +102,23 @@ func (m *FileTreeModel) Update(msg tea.Msg) (*FileTreeModel, tea.Cmd) {
 				m.cursor++
 				m.adjustScroll()
 			}
-		case "right", "l", "enter":
+		case "enter":
+			// Navigate into directories or open files
 			newM, cmd := m.handleSelection()
+			*m = newM
+			return m, cmd
+		case "right", "l":
+			// Expand/collapse folders in-place
+			newM, cmd := m.handleExpansion()
 			*m = newM
 			return m, cmd
 		case "left", "h":
 			newM, cmd := m.handleCollapse()
+			*m = newM
+			return m, cmd
+		case "backspace":
+			// Navigate to parent directory
+			newM, cmd := m.navigateToParent()
 			*m = newM
 			return m, cmd
 		case " ":
@@ -115,33 +126,26 @@ func (m *FileTreeModel) Update(msg tea.Msg) (*FileTreeModel, tea.Cmd) {
 		case "r":
 			return m, m.loadDirectory(m.rootPath)
 		case "a":
-			// If no items are loaded, try to load them first
-			if len(m.items) == 0 {
-				return m, m.loadDirectory(m.currentPath)
-			}
-
-			// Check if any items are selected
+			// Multi-mode analysis: respects selection state for focused vs global analysis
 			if m.hasSelectedItems() {
-				// Analyze selected items (existing behavior for specific selections)
-				if m.cursor < len(m.items) {
-					item := m.items[m.cursor]
-					if item.IsDirectory {
-						return m, func() tea.Msg {
-							return shared.DirectorySelectedMsg{Path: item.Path}
-						}
-					} else {
-						// For files, show a message that analysis is for directories
-						return m, func() tea.Msg {
-							return shared.StatusUpdateMsg{Message: "Analysis is only available for directories"}
-						}
+				// Selected items mode: analyze only the selected directories
+				return m, m.analyzeSelectedItems()
+			} else if len(m.items) > 0 && m.cursor < len(m.items) {
+				// Single item mode: analyze the highlighted item
+				item := m.items[m.cursor]
+				if item.IsDirectory {
+					// Analyze the highlighted directory
+					return m, func() tea.Msg {
+						return shared.DirectorySelectedMsg{Path: item.Path}
+					}
+				} else {
+					// For files, analyze the directory containing the file
+					return m, func() tea.Msg {
+						return shared.DirectorySelectedMsg{Path: filepath.Dir(item.Path)}
 					}
 				}
-				// Fallback: if cursor is out of bounds but items are selected, analyze current directory
-				return m, func() tea.Msg {
-					return shared.DirectorySelectedMsg{Path: m.currentPath}
-				}
 			} else {
-				// No items selected - default to analyzing current directory
+				// Global mode: analyze entire current directory
 				return m, func() tea.Msg {
 					return shared.DirectorySelectedMsg{Path: m.currentPath}
 				}
@@ -242,8 +246,19 @@ func (m *FileTreeModel) View(width, height int) string {
 		b.WriteString("\n" + components.HelpStyle.Render(itemInfo))
 	}
 
-	// Controls help
-	controls := "Controls: ↑↓/kj navigate, →/l/Enter select, ←/h collapse, Space toggle, a analyze, r refresh"
+	// Controls help - show different help based on selection state
+	var controls string
+	if m.hasSelectedItems() {
+		selectedCount := 0
+		for _, selected := range m.selected {
+			if selected {
+				selectedCount++
+			}
+		}
+		controls = fmt.Sprintf("Controls: Enter=nav, →=expand, ←=parent, Space=select (%d), a=analyze", selectedCount)
+	} else {
+		controls = "Controls: Enter=navigate, →=expand, ←=parent/collapse, Space=select, a=analyze"
+	}
 	b.WriteString("\n" + components.HelpStyle.Render(controls))
 
 	return b.String()
@@ -428,7 +443,7 @@ func (m FileTreeModel) getFileIcon(item shared.FileTreeItem) string {
 	}
 }
 
-// handleSelection handles item selection (expand/collapse or file selection)
+// handleSelection handles item selection (navigate into directories or select files)
 func (m FileTreeModel) handleSelection() (FileTreeModel, tea.Cmd) {
 	if m.cursor >= len(m.items) {
 		return m, nil
@@ -437,12 +452,8 @@ func (m FileTreeModel) handleSelection() (FileTreeModel, tea.Cmd) {
 	item := m.items[m.cursor]
 
 	if item.IsDirectory {
-		// Toggle directory expansion
-		if m.expanded[item.Path] {
-			return m.collapseDirectory(item.Path)
-		} else {
-			return m.expandDirectory(item.Path)
-		}
+		// Navigate into directory (file manager style)
+		return m.navigateToDirectory(item.Path)
 	} else {
 		// Select file
 		return m, func() tea.Msg {
@@ -458,6 +469,27 @@ func (m FileTreeModel) handleSelection() (FileTreeModel, tea.Cmd) {
 	}
 }
 
+// handleExpansion handles expanding/collapsing directories in-place
+func (m FileTreeModel) handleExpansion() (FileTreeModel, tea.Cmd) {
+	if m.cursor >= len(m.items) {
+		return m, nil
+	}
+
+	item := m.items[m.cursor]
+
+	if item.IsDirectory {
+		// Toggle directory expansion
+		if m.expanded[item.Path] {
+			return m.collapseDirectory(item.Path)
+		} else {
+			return m.expandDirectory(item.Path)
+		}
+	}
+	
+	// If it's a file, do nothing
+	return m, nil
+}
+
 // handleCollapse handles collapsing directories or navigating to parent
 func (m FileTreeModel) handleCollapse() (FileTreeModel, tea.Cmd) {
 	if m.cursor >= len(m.items) {
@@ -471,31 +503,8 @@ func (m FileTreeModel) handleCollapse() (FileTreeModel, tea.Cmd) {
 		return m.collapseDirectory(item.Path)
 	}
 
-	// If we're on the first item and it's not an expanded directory,
-	// show confirmation for parent directory navigation
-	if m.cursor == 0 {
-		// Get parent directory path
-		parentPath := filepath.Dir(m.currentPath)
-
-		// Don't navigate if we're already at root or can't determine parent
-		if parentPath == m.currentPath || parentPath == "." {
-			return m, func() tea.Msg {
-				return shared.StatusUpdateMsg{Message: "Already at root directory"}
-			}
-		}
-
-		// Show confirmation dialog
-		return m, func() tea.Msg {
-			return shared.ShowConfirmationMsg{
-				Message: fmt.Sprintf("Navigate to parent directory?\n%s", parentPath),
-				Action:  "navigate_parent",
-				Data:    parentPath,
-			}
-		}
-	}
-
-	// If directory is not expanded or not a directory, do nothing
-	return m, nil
+	// If directory is not expanded or not a directory, go to parent
+	return m.navigateToParent()
 }
 
 // expandDirectory expands a directory and loads its contents
@@ -524,6 +533,22 @@ func (m FileTreeModel) loadDirectory(path string) tea.Cmd {
 // buildFileTree recursively builds the file tree
 func (m FileTreeModel) buildFileTree(path string, level int) ([]shared.FileTreeItem, error) {
 	var items []shared.FileTreeItem
+
+	// Add parent directory entry (..) when not at filesystem root and at top level
+	if level == 0 {
+		parentPath := filepath.Dir(path)
+		if parentPath != path { // Not at filesystem root
+			parentItem := shared.FileTreeItem{
+				Name:        "../",
+				Path:        parentPath,
+				IsDirectory: true,
+				IsSupported: false,
+				Level:       0,
+				Size:        0,
+			}
+			items = append(items, parentItem)
+		}
+	}
 
 	entries, err := os.ReadDir(path)
 	if err != nil {
@@ -637,13 +662,18 @@ func (m FileTreeModel) showDirectoryInfo(path string) tea.Cmd {
 }
 
 // hasSelectedItems returns true if any items are currently selected
-func (m FileTreeModel) hasSelectedItems() bool {
+func (m *FileTreeModel) hasSelectedItems() bool {
 	for _, selected := range m.selected {
 		if selected {
 			return true
 		}
 	}
 	return false
+}
+
+// HasSelectedItems returns true if any items are currently selected (public method)
+func (m *FileTreeModel) HasSelectedItems() bool {
+	return m.hasSelectedItems()
 }
 
 // GetCurrentPath returns the current path
@@ -659,4 +689,93 @@ func (m *FileTreeModel) SetCurrentPath(path string) {
 // LoadDirectory loads directory contents (public method)
 func (m *FileTreeModel) LoadDirectory(path string) tea.Cmd {
 	return m.loadDirectory(path)
+}
+
+// analyzeSelectedItems handles analysis of selected items with appropriate feedback
+func (m *FileTreeModel) analyzeSelectedItems() tea.Cmd {
+	var selectedDirs []string
+	var selectedFiles []string
+	selectedCount := 0
+
+	// Collect selected items
+	for i, selected := range m.selected {
+		if selected && i < len(m.items) {
+			item := m.items[i]
+			selectedCount++
+			if item.IsDirectory {
+				selectedDirs = append(selectedDirs, item.Path)
+			} else {
+				selectedFiles = append(selectedFiles, item.Path)
+			}
+		}
+	}
+
+	if selectedCount == 0 {
+		// No actual selections, fall back to current directory
+		return func() tea.Msg {
+			return shared.StatusUpdateMsg{Message: "No items selected, analyzing current directory"}
+		}
+	}
+
+	// Determine what to analyze
+	if len(selectedDirs) > 0 {
+		// Analyze selected directories
+		if len(selectedDirs) == 1 {
+			return func() tea.Msg {
+				return shared.DirectorySelectedMsg{Path: selectedDirs[0]}
+			}
+		} else {
+			// Multiple directories - analyze first one and notify user
+			firstDir := selectedDirs[0]
+			return func() tea.Msg {
+				return shared.DirectorySelectedMsg{Path: firstDir}
+			}
+		}
+	} else if len(selectedFiles) > 0 {
+		// Only files selected, analyze their parent directory
+		parentDir := filepath.Dir(selectedFiles[0])
+		return func() tea.Msg {
+			return shared.DirectorySelectedMsg{Path: parentDir}
+		}
+	}
+
+	// Fallback
+	return func() tea.Msg {
+		return shared.StatusUpdateMsg{Message: "Unable to determine what to analyze from selection"}
+	}
+}
+
+// navigateToParent navigates to the parent directory (like cd ..)
+func (m FileTreeModel) navigateToParent() (FileTreeModel, tea.Cmd) {
+	parentPath := filepath.Dir(m.currentPath)
+	
+	// Check if we're already at the filesystem root
+	if parentPath == m.currentPath {
+		return m, func() tea.Msg {
+			return shared.StatusUpdateMsg{Message: "Already at filesystem root"}
+		}
+	}
+	
+	// Navigate to parent directory
+	m.currentPath = parentPath
+	m.rootPath = parentPath
+	m.cursor = 0
+	m.scrollY = 0
+	m.selected = make(map[int]bool) // Clear selections
+	m.expanded = make(map[string]bool) // Clear expansions
+	
+	return m, m.loadDirectory(parentPath)
+}
+
+// navigateToDirectory navigates into a directory (like cd directory)
+func (m FileTreeModel) navigateToDirectory(directoryPath string) (FileTreeModel, tea.Cmd) {
+	// Navigate into the directory
+	m.currentPath = directoryPath
+	m.rootPath = directoryPath
+	m.cursor = 0
+	m.scrollY = 0
+	m.selected = make(map[int]bool) // Clear selections
+	m.expanded = make(map[string]bool) // Clear expansions
+	
+	return m, m.loadDirectory(directoryPath)
 }

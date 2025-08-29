@@ -90,7 +90,7 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
-		// Handle tab navigation first
+		// Handle tab navigation first (if not in special views)
 		if m.currentView != ConfirmationView && m.currentView != LoadingView {
 			oldTab := m.tabs.GetActiveTab()
 			m.tabs, _ = m.tabs.Update(msg)
@@ -102,7 +102,7 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		// Global key bindings
+		// Global key bindings (highest priority)
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
@@ -114,8 +114,8 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case "esc":
+			// Always return to Explorer tab when pressing Esc
 			if m.currentView != FileTreeView {
-				// Switch to Explorer tab (FileTreeView)
 				m.tabs.SetActiveTab(0)
 				m.currentView = FileTreeView
 			}
@@ -132,6 +132,13 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return ClearAnalysisMsg{}
 				}
 			}
+
+		case "ctrl+home":
+			// Navigation reset - return to safe state
+			m.tabs.SetActiveTab(0)
+			m.currentView = FileTreeView
+			m.statusBar.SetMessage("Navigation reset - returned to Explorer")
+			return m, nil
 		}
 
 		// View-specific key bindings
@@ -180,7 +187,15 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.analysisData != nil {
 					return m, func() tea.Msg { return ExportMsg{Format: "json", Path: "analysis.json"} }
 				}
+			case "r":
+				// Reset content view to default state
+				if m.analysisData != nil {
+					m.contentView.SetShowMetrics(false)
+					m.contentView.UpdateContentFromAnalysis()
+					return m, nil
+				}
 			default:
+				// Pass all other keys (including 1,2,3,4) to ContentView for handling
 				m.contentView, cmd = m.contentView.Update(msg)
 				cmds = append(cmds, cmd)
 			}
@@ -225,11 +240,11 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.loading = false
 		m.progressInfo = nil
-		m.statusBar.SetMessage(fmt.Sprintf("Analysis complete - %d files analyzed", msg.Analysis.TotalFiles))
+		m.statusBar.SetMessage(fmt.Sprintf("Analysis complete - %d files analyzed. Press Ctrl+2 for Analysis tab", msg.Analysis.TotalFiles))
 
-		// Update content view with analysis results
+		// Update content view with analysis results but don't force switch
 		m.contentView.SetAnalysisData(m.analysisData)
-		m.currentView = ContentView
+		// Stay in current view, let user decide when to switch
 
 		return m, nil
 
@@ -240,11 +255,11 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.loading = false
 		m.progressInfo = nil
-		m.statusBar.SetMessage(fmt.Sprintf("Enhanced analysis complete - %d files analyzed", msg.EnhancedAnalysis.TotalFiles))
+		m.statusBar.SetMessage(fmt.Sprintf("Enhanced analysis complete - %d files analyzed. Press Ctrl+2 for Analysis tab", msg.EnhancedAnalysis.TotalFiles))
 
-		// Update content view with enhanced analysis results
+		// Update content view with enhanced analysis results but don't force switch  
 		m.contentView.SetAnalysisData(m.analysisData)
-		m.currentView = ContentView
+		// Stay in current view, let user decide when to switch
 
 		return m, nil
 
@@ -273,7 +288,14 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Total:   0,
 			Message: "Starting analysis...",
 		}
-		m.statusBar.SetMessage(fmt.Sprintf("Analyzing directory: %s", msg.Path))
+		
+		// Provide context about what type of analysis is being performed
+		analysisType := "Global analysis"
+		if m.fileTree != nil && m.fileTree.HasSelectedItems() {
+			analysisType = "Selected items analysis"
+		}
+		
+		m.statusBar.SetMessage(fmt.Sprintf("%s: %s", analysisType, msg.Path))
 		return m, m.startAnalysis(msg.Path)
 
 	case AnalysisStartedMsg:
@@ -422,17 +444,7 @@ func (m *MainModel) View() string {
 	case FileTreeView:
 		content = m.fileTree.View(m.width, contentHeight)
 	case ContentView:
-		// Auto-show metrics if we're on the Analysis tab and have data
-		if m.tabs.GetActiveTab() == 1 && m.analysisData != nil { // Analysis tab
-			// Ensure metrics are shown for the Analysis tab
-			if !m.contentView.ShowMetrics() {
-				m.contentView.ToggleMetrics() // Turn on if not on
-				if m.contentView.ShowSummary() {
-					m.contentView.ToggleSummary()
-				} // Turn off if on
-				m.contentView.UpdateContentFromAnalysis()
-			}
-		}
+		// Let user control what they see in the Analysis tab
 		content = m.contentView.View(m.width, contentHeight)
 	case ConfigView:
 		content = m.renderConfigView(m.width)
@@ -836,26 +848,33 @@ func (m *MainModel) updateStatusBarKeyBinds() {
 
 	// Global key bindings
 	keyBinds = append(keyBinds, components.KeyBind{Key: " ?", Description: "help"})
-	keyBinds = append(keyBinds, components.KeyBind{Key: " q", Description: "quit"})
-	keyBinds = append(keyBinds, components.KeyBind{Key: " tab", Description: "switch view"})
+	keyBinds = append(keyBinds, components.KeyBind{Key: " esc", Description: "explorer"})
+	keyBinds = append(keyBinds, components.KeyBind{Key: " 1-4", Description: "tabs"})
+	keyBinds = append(keyBinds, components.KeyBind{Key: " tab/shift+tab", Description: "cycle tabs"})
 
 	// View-specific key bindings
 	switch m.currentView {
 	case FileTreeView:
-		keyBinds = append(keyBinds, components.KeyBind{Key: " a", Description: "analyze"})
-		keyBinds = append(keyBinds, components.KeyBind{Key: " r", Description: "refresh"})
+		keyBinds = append(keyBinds, components.KeyBind{Key: " a", Description: "analyze dir"})
+		keyBinds = append(keyBinds, components.KeyBind{Key: " ↑↓", Description: "navigate"})
 		keyBinds = append(keyBinds, components.KeyBind{Key: " enter", Description: "select"})
 	case ContentView:
 		if m.analysisData != nil {
 			keyBinds = append(keyBinds, components.KeyBind{Key: " m", Description: "metrics"})
+			if m.contentView.ShowMetrics() {
+				keyBinds = append(keyBinds, components.KeyBind{Key: " 6-9", Description: "modes"})
+			}
 			keyBinds = append(keyBinds, components.KeyBind{Key: " s", Description: "summary"})
-			keyBinds = append(keyBinds, components.KeyBind{Key: " e", Description: "export"})
+			keyBinds = append(keyBinds, components.KeyBind{Key: " r", Description: "reset view"})
 		}
 		keyBinds = append(keyBinds, components.KeyBind{Key: " ↑↓", Description: "scroll"})
 	case ConfigView:
-		keyBinds = append(keyBinds, components.KeyBind{Key: " enter", Description: "execute"})
+		keyBinds = append(keyBinds, components.KeyBind{Key: " enter", Description: "execute cmd"})
+		keyBinds = append(keyBinds, components.KeyBind{Key: " type", Description: "command"})
 	case LoadingView:
 		keyBinds = append(keyBinds, components.KeyBind{Key: " ctrl+c", Description: "cancel"})
+	case HelpView:
+		keyBinds = append(keyBinds, components.KeyBind{Key: " ↑↓", Description: "navigate"})
 	}
 
 	m.statusBar.SetKeyBinds(keyBinds)

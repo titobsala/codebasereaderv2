@@ -66,9 +66,10 @@ func (e *Engine) AnalyzeDirectoryWithProgress(rootPath string, progressCallback 
 	// Create file walker
 	walker := NewFileWalker(e.parserRegistry, e.config)
 
-	// Start worker pool
-	e.workerPool.Start()
-	defer e.workerPool.Stop()
+	// Create a new worker pool for this analysis to avoid reuse issues
+	workerPool := NewWorkerPool(e.config.MaxWorkers)
+	workerPool.Start()
+	defer workerPool.Stop()
 
 	// Walk directory to find files
 	walkResultChan, err := walker.Walk(rootPath)
@@ -113,7 +114,7 @@ func (e *Engine) AnalyzeDirectoryWithProgress(rootPath string, progressCallback 
 			MetricsCalculator: e.metricsCalculator,
 		}
 
-		if err := e.workerPool.SubmitJob(job); err != nil {
+		if err := workerPool.SubmitJob(job); err != nil {
 			return nil, fmt.Errorf("failed to submit job for %s: %w", walkResult.FilePath, err)
 		}
 	}
@@ -123,7 +124,7 @@ func (e *Engine) AnalyzeDirectoryWithProgress(rootPath string, progressCallback 
 	var errors []error
 	processedCount := 0
 
-	resultChan := e.workerPool.GetResultChannel()
+	resultChan := workerPool.GetResultChannel()
 
 	for processedCount < totalFiles {
 		select {

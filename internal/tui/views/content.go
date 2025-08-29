@@ -84,79 +84,58 @@ func (m *ContentViewModel) Update(msg tea.Msg) (*ContentViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
+		// Scrolling commands - unified for both metrics and regular content
 		case "up", "k":
-			if m.showMetrics && m.metricsDisplay != nil {
-				m.metricsDisplay.Scroll(-1)
-			} else if m.scrollY > 0 {
-				m.scrollY--
-			}
+			m.scrollUp(1)
 		case "down", "j":
-			if m.showMetrics && m.metricsDisplay != nil {
-				m.metricsDisplay.Scroll(1)
-			} else if m.scrollY < m.maxScroll {
-				m.scrollY++
-			}
+			m.scrollDown(1)
 		case "pgup":
-			if m.showMetrics && m.metricsDisplay != nil {
-				m.metricsDisplay.Scroll(-10)
-			} else {
-				m.scrollY = max(0, m.scrollY-10)
-			}
+			m.scrollUp(10)
 		case "pgdown":
-			if m.showMetrics && m.metricsDisplay != nil {
-				m.metricsDisplay.Scroll(10)
-			} else {
-				m.scrollY = min(m.maxScroll, m.scrollY+10)
-			}
+			m.scrollDown(10)
 		case "home", "g":
-			if m.showMetrics && m.metricsDisplay != nil {
-				m.metricsDisplay.Scroll(-1000) // Reset to top
-			} else {
-				m.scrollY = 0
-			}
+			m.scrollToTop()
 		case "end", "G":
-			if m.showMetrics && m.metricsDisplay != nil {
-				m.metricsDisplay.Scroll(1000) // Go to bottom
-			} else {
-				m.scrollY = m.maxScroll
-			}
+			m.scrollToBottom()
 		case "ctrl+u":
 			// Scroll up half page
-			if m.showMetrics && m.metricsDisplay != nil {
-				m.metricsDisplay.Scroll(-m.height / 2)
-			} else {
-				m.scrollY = max(0, m.scrollY-m.height/2)
-			}
+			m.scrollUp(m.height / 2)
 		case "ctrl+d":
 			// Scroll down half page
-			if m.showMetrics && m.metricsDisplay != nil {
-				m.metricsDisplay.Scroll(m.height / 2)
-			} else {
-				m.scrollY = min(m.maxScroll, m.scrollY+m.height/2)
-			}
-		case "1":
-			// Switch to overview mode
-			if m.showMetrics {
+			m.scrollDown(m.height / 2)
+		
+		// Metrics mode switching (only when metrics are shown) - using 6-9 for terminal compatibility
+		case "6":
+			if m.showMetrics && m.analysisData != nil {
 				m.currentMode = components.OverviewMode
-				m.metricsDisplay.SetMode(components.OverviewMode)
+				if m.metricsDisplay != nil {
+					m.metricsDisplay.SetMode(components.OverviewMode)
+				}
+				m.UpdateContentFromAnalysis()
 			}
-		case "2":
-			// Switch to detailed mode
-			if m.showMetrics {
+		case "7":
+			if m.showMetrics && m.analysisData != nil {
 				m.currentMode = components.DetailedMode
-				m.metricsDisplay.SetMode(components.DetailedMode)
+				if m.metricsDisplay != nil {
+					m.metricsDisplay.SetMode(components.DetailedMode)
+				}
+				m.UpdateContentFromAnalysis()
 			}
-		case "3":
-			// Switch to quality mode
-			if m.showMetrics {
+		case "8":
+			if m.showMetrics && m.analysisData != nil {
 				m.currentMode = components.QualityMode
-				m.metricsDisplay.SetMode(components.QualityMode)
+				if m.metricsDisplay != nil {
+					m.metricsDisplay.SetMode(components.QualityMode)
+				}
+				m.UpdateContentFromAnalysis()
 			}
-		case "4":
-			// Switch to dependency mode
-			if m.showMetrics {
+		case "9":
+			if m.showMetrics && m.analysisData != nil {
 				m.currentMode = components.DependencyMode
-				m.metricsDisplay.SetMode(components.DependencyMode)
+				if m.metricsDisplay != nil {
+					m.metricsDisplay.SetMode(components.DependencyMode)
+				}
+				m.UpdateContentFromAnalysis()
 			}
 		}
 	}
@@ -259,13 +238,13 @@ func (m *ContentViewModel) View(width, height int) string {
 	var controls string
 	if m.showMetrics && m.analysisData != nil {
 		// Show metric navigation controls when metrics are active
-		controls = "Controls: ↑↓ scroll, 1 overview, 2 detailed, 3 quality, 4 deps, m toggle, s summary, Esc back"
+		controls = "Controls: ↑↓ scroll, 6-9 switch modes (6=overview 7=detailed 8=quality 9=deps), r reset, 1-4 tabs"
 	} else if m.analysisData != nil {
 		// Show available modes when analysis data exists but metrics not shown
-		controls = "Controls: ↑↓/kj scroll, m metrics (1-4 modes), s summary, Esc back"
+		controls = "Controls: ↑↓ scroll, m metrics, s summary, r reset, 1-4 tabs"
 	} else {
 		// No analysis data available
-		controls = "Controls: ↑↓/kj scroll, analyze a directory to see metrics, Esc back"
+		controls = "Controls: ↑↓ scroll, press 'a' in Explorer to analyze directory, 1-4 tabs"
 	}
 	b.WriteString("\n" + components.HelpStyle.Render(controls))
 
