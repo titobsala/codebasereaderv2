@@ -26,6 +26,7 @@ func NewTabsModel() *TabsModel {
 	tabs := []TabItem{
 		{Title: "Explorer", Icon: "📁", Content: "File tree and content view"},
 		{Title: "Analysis", Icon: "📊", Content: "Metrics and analysis results"},
+		{Title: "Visualizations", Icon: "📈", Content: "Interactive charts and visualizations"},
 		{Title: "Configuration", Icon: "⚙️", Content: "Settings and preferences"},
 		{Title: "Help", Icon: "❓", Content: "Help and documentation"},
 	}
@@ -63,6 +64,10 @@ func (m *TabsModel) Update(msg tea.Msg) (*TabsModel, tea.Cmd) {
 		case "4":
 			if len(m.Tabs) > 3 {
 				m.activeTab = 3
+			}
+		case "5":
+			if len(m.Tabs) > 4 {
+				m.activeTab = 4
 			}
 		}
 	case tea.WindowSizeMsg:
@@ -146,8 +151,10 @@ func (m *TabsModel) MapTabToViewType() shared.ViewType {
 	case 1:
 		return shared.ContentView // Analysis (will show metrics when analysis is available)
 	case 2:
-		return shared.ConfigView // Configuration
+		return shared.VisualizationView // Visualizations
 	case 3:
+		return shared.ConfigView // Configuration
+	case 4:
 		return shared.HelpView // Help
 	default:
 		return shared.FileTreeView

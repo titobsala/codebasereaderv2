@@ -10,9 +10,10 @@ type ViewType = shared.ViewType
 const (
 	FileTreeView          = shared.FileTreeView
 	ContentView           = shared.ContentView
+	VisualizationView     = shared.VisualizationView
 	HelpView              = shared.HelpView
 	ConfigView            = shared.ConfigView
-	LoadingView  ViewType = iota + 4 // Start after shared constants
+	LoadingView  ViewType = iota + 5 // Start after shared constants
 	MetricsView
 	QualityView
 	DependencyView

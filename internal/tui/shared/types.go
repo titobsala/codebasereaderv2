@@ -11,6 +11,7 @@ type ViewType int
 const (
 	FileTreeView ViewType = iota
 	ContentView
+	VisualizationView
 	HelpView
 	ConfigView
 )

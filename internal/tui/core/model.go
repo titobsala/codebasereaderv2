@@ -18,6 +18,7 @@ import (
 type MainModel struct {
 	fileTree          *views.FileTreeModel
 	contentView       *views.ContentViewModel
+	visualizationView *views.VisualizationViewModel
 	statusBar         *components.StatusBarModel
 	inputField        textinput.Model
 	currentView       ViewType
@@ -53,18 +54,19 @@ func NewMainModel() *MainModel {
 	prog.ShowPercentage = true
 
 	return &MainModel{
-		fileTree:       views.NewFileTreeModel(),
-		contentView:    views.NewContentViewModel(),
-		statusBar:      &components.StatusBarModel{},
-		inputField:     ti,
-		currentView:    FileTreeView,
-		loading:        false,
-		width:          80,
-		height:         24,
-		analysisEngine: analysisEngine,
-		progress:       prog,
-		tabs:           components.NewTabsModel(),
-		helpView:       views.NewHelpViewModel(),
+		fileTree:          views.NewFileTreeModel(),
+		contentView:       views.NewContentViewModel(),
+		visualizationView: views.NewVisualizationViewModel(),
+		statusBar:         &components.StatusBarModel{},
+		inputField:        ti,
+		currentView:       FileTreeView,
+		loading:           false,
+		width:             80,
+		height:            24,
+		analysisEngine:    analysisEngine,
+		progress:          prog,
+		tabs:              components.NewTabsModel(),
+		helpView:          views.NewHelpViewModel(),
 	}
 }
 
@@ -109,7 +111,7 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "?", "f1":
 			// Switch to help tab
-			m.tabs.SetActiveTab(3) // Help tab
+			m.tabs.SetActiveTab(4) // Help tab
 			m.currentView = HelpView
 			return m, nil
 
@@ -214,6 +216,10 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, cmd)
 			}
 
+		case VisualizationView:
+			// Handle visualization navigation
+			m.visualizationView.Update(msg.String())
+
 		case HelpView:
 			// Handle help navigation
 			m.helpView.Update(msg.String())
@@ -242,8 +248,14 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.progressInfo = nil
 		m.statusBar.SetMessage(fmt.Sprintf("Analysis complete - %d files analyzed. Press Ctrl+2 for Analysis tab", msg.Analysis.TotalFiles))
 
-		// Update content view with analysis results but don't force switch
+		// Update content view and visualization view with analysis results but don't force switch
 		m.contentView.SetAnalysisData(m.analysisData)
+		// Convert to visualization data format
+		vizData := &views.AnalysisData{
+			EnhancedProjectAnalysis: nil, // Basic analysis doesn't have enhanced data
+			Summary:                 m.analysisData.Summary,
+		}
+		m.visualizationView.SetAnalysisData(vizData)
 		// Stay in current view, let user decide when to switch
 
 		return m, nil
@@ -257,8 +269,14 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.progressInfo = nil
 		m.statusBar.SetMessage(fmt.Sprintf("Enhanced analysis complete - %d files analyzed. Press Ctrl+2 for Analysis tab", msg.EnhancedAnalysis.TotalFiles))
 
-		// Update content view with enhanced analysis results but don't force switch
+		// Update content view and visualization view with enhanced analysis results but don't force switch
 		m.contentView.SetAnalysisData(m.analysisData)
+		// Convert to visualization data format
+		vizData := &views.AnalysisData{
+			EnhancedProjectAnalysis: m.analysisData.EnhancedProjectAnalysis,
+			Summary:                 m.analysisData.Summary,
+		}
+		m.visualizationView.SetAnalysisData(vizData)
 		// Stay in current view, let user decide when to switch
 
 		return m, nil
@@ -355,6 +373,7 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.loading = false
 		m.progressInfo = nil
 		m.contentView.SetAnalysisData(nil)
+		m.visualizationView.SetAnalysisData(nil)
 		m.statusBar.SetMessage("Analysis data cleared")
 		return m, nil
 
@@ -446,6 +465,8 @@ func (m *MainModel) View() string {
 	case ContentView:
 		// Let user control what they see in the Analysis tab
 		content = m.contentView.View(m.width, contentHeight)
+	case VisualizationView:
+		content = m.visualizationView.Render(m.width, contentHeight)
 	case ConfigView:
 		content = m.renderConfigView(m.width)
 	case HelpView:
@@ -829,6 +850,8 @@ func (m *MainModel) getViewName() string {
 		return "File Tree"
 	case ContentView:
 		return "Content"
+	case VisualizationView:
+		return "Visualization"
 	case ConfigView:
 		return "Configuration"
 	case HelpView:
@@ -849,7 +872,7 @@ func (m *MainModel) updateStatusBarKeyBinds() {
 	// Global key bindings
 	keyBinds = append(keyBinds, components.KeyBind{Key: " ?", Description: "help"})
 	keyBinds = append(keyBinds, components.KeyBind{Key: " esc", Description: "explorer"})
-	keyBinds = append(keyBinds, components.KeyBind{Key: " 1-4", Description: "tabs"})
+	keyBinds = append(keyBinds, components.KeyBind{Key: " 1-5", Description: "tabs"})
 	keyBinds = append(keyBinds, components.KeyBind{Key: " tab/shift+tab", Description: "cycle tabs"})
 
 	// View-specific key bindings
@@ -866,6 +889,11 @@ func (m *MainModel) updateStatusBarKeyBinds() {
 			}
 			keyBinds = append(keyBinds, components.KeyBind{Key: " s", Description: "summary"})
 			keyBinds = append(keyBinds, components.KeyBind{Key: " r", Description: "reset view"})
+		}
+		keyBinds = append(keyBinds, components.KeyBind{Key: " ↑↓", Description: "scroll"})
+	case VisualizationView:
+		if m.analysisData != nil {
+			keyBinds = append(keyBinds, components.KeyBind{Key: " 1-6", Description: "vis modes"})
 		}
 		keyBinds = append(keyBinds, components.KeyBind{Key: " ↑↓", Description: "scroll"})
 	case ConfigView:
@@ -1106,6 +1134,10 @@ func (m *MainModel) GetContentView() *views.ContentViewModel {
 
 func (m *MainModel) SetContentView(contentView *views.ContentViewModel) {
 	m.contentView = contentView
+}
+
+func (m *MainModel) GetVisualizationView() *views.VisualizationViewModel {
+	return m.visualizationView
 }
 
 func (m *MainModel) GetHelpView() *views.HelpViewModel {
