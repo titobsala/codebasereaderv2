@@ -327,16 +327,16 @@ func (m *MetricsDisplay) renderComplexityAnalysis(analysis *metrics.EnhancedProj
 	var b strings.Builder
 
 	b.WriteString("\n🧮 Complexity Analysis\n")
-	
+
 	// Overall metrics
 	b.WriteString(fmt.Sprintf("📊 Total Complexity: %s\n", tui.FormatNumber(analysis.ProjectMetrics.TotalComplexity)))
 	b.WriteString(fmt.Sprintf("📈 Average Complexity: %.1f\n", analysis.ProjectMetrics.AverageComplexity))
 	b.WriteString(fmt.Sprintf("⚠️  Maximum Complexity: %s\n", tui.FormatNumber(analysis.ProjectMetrics.MaxComplexity)))
 	b.WriteString(fmt.Sprintf("🏗️  Maintainability Index: %.1f%%\n", analysis.ProjectMetrics.MaintainabilityIndex))
-	
+
 	// Technical debt
 	b.WriteString(fmt.Sprintf("🔧 Technical Debt: %.1f hours\n", analysis.ProjectMetrics.TechnicalDebt))
-	
+
 	// Code distribution
 	totalFuncs := 0
 	totalClasses := 0
@@ -344,7 +344,7 @@ func (m *MetricsDisplay) renderComplexityAnalysis(analysis *metrics.EnhancedProj
 		totalFuncs += lang.FunctionCount
 		totalClasses += lang.ClassCount
 	}
-	
+
 	if totalFuncs > 0 {
 		avgComplexityPerFunc := float64(analysis.ProjectMetrics.TotalComplexity) / float64(totalFuncs)
 		b.WriteString(fmt.Sprintf("⚡ Functions: %s (avg %.1f complexity)\n", tui.FormatNumber(totalFuncs), avgComplexityPerFunc))
@@ -359,9 +359,9 @@ func (m *MetricsDisplay) renderComplexityAnalysis(analysis *metrics.EnhancedProj
 // renderKeyInsights provides actionable insights about the codebase
 func (m *MetricsDisplay) renderKeyInsights(analysis *metrics.EnhancedProjectAnalysis) string {
 	var b strings.Builder
-	
+
 	b.WriteString("\n💡 Key Insights\n")
-	
+
 	// Analyze quality score for insights
 	score := analysis.QualityScore.Overall
 	if score >= 90 {
@@ -373,7 +373,7 @@ func (m *MetricsDisplay) renderKeyInsights(analysis *metrics.EnhancedProjectAnal
 	} else {
 		b.WriteString("🚨 Low quality score - significant technical debt present\n")
 	}
-	
+
 	// Complexity insights
 	if analysis.ProjectMetrics.AverageComplexity > 10 {
 		b.WriteString("🔥 High average complexity - consider breaking down complex functions\n")
@@ -382,7 +382,7 @@ func (m *MetricsDisplay) renderKeyInsights(analysis *metrics.EnhancedProjectAnal
 	} else {
 		b.WriteString("✨ Low complexity - well-structured and maintainable code\n")
 	}
-	
+
 	// Language diversity
 	langCount := len(analysis.Languages)
 	if langCount == 1 {
@@ -392,7 +392,7 @@ func (m *MetricsDisplay) renderKeyInsights(analysis *metrics.EnhancedProjectAnal
 	} else {
 		b.WriteString("🔀 High language diversity - consider consolidation for maintainability\n")
 	}
-	
+
 	// Size assessment
 	if analysis.TotalLines > 100000 {
 		b.WriteString("🏢 Large codebase - consider modularization strategies\n")
@@ -401,7 +401,7 @@ func (m *MetricsDisplay) renderKeyInsights(analysis *metrics.EnhancedProjectAnal
 	} else {
 		b.WriteString("🏠 Small codebase - easy to navigate and understand\n")
 	}
-	
+
 	return b.String()
 }
 

@@ -11,7 +11,7 @@ func (m *ContentViewModel) scrollUp(lines int) {
 	}
 }
 
-// scrollDown scrolls down by the specified number of lines  
+// scrollDown scrolls down by the specified number of lines
 func (m *ContentViewModel) scrollDown(lines int) {
 	if m.showMetrics && m.metricsDisplay != nil {
 		m.metricsDisplay.Scroll(lines)

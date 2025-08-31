@@ -485,7 +485,7 @@ func (m FileTreeModel) handleExpansion() (FileTreeModel, tea.Cmd) {
 			return m.expandDirectory(item.Path)
 		}
 	}
-	
+
 	// If it's a file, do nothing
 	return m, nil
 }
@@ -748,22 +748,22 @@ func (m *FileTreeModel) analyzeSelectedItems() tea.Cmd {
 // navigateToParent navigates to the parent directory (like cd ..)
 func (m FileTreeModel) navigateToParent() (FileTreeModel, tea.Cmd) {
 	parentPath := filepath.Dir(m.currentPath)
-	
+
 	// Check if we're already at the filesystem root
 	if parentPath == m.currentPath {
 		return m, func() tea.Msg {
 			return shared.StatusUpdateMsg{Message: "Already at filesystem root"}
 		}
 	}
-	
+
 	// Navigate to parent directory
 	m.currentPath = parentPath
 	m.rootPath = parentPath
 	m.cursor = 0
 	m.scrollY = 0
-	m.selected = make(map[int]bool) // Clear selections
+	m.selected = make(map[int]bool)    // Clear selections
 	m.expanded = make(map[string]bool) // Clear expansions
-	
+
 	return m, m.loadDirectory(parentPath)
 }
 
@@ -774,8 +774,8 @@ func (m FileTreeModel) navigateToDirectory(directoryPath string) (FileTreeModel,
 	m.rootPath = directoryPath
 	m.cursor = 0
 	m.scrollY = 0
-	m.selected = make(map[int]bool) // Clear selections
+	m.selected = make(map[int]bool)    // Clear selections
 	m.expanded = make(map[string]bool) // Clear expansions
-	
+
 	return m, m.loadDirectory(directoryPath)
 }

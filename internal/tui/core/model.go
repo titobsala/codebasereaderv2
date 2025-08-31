@@ -257,7 +257,7 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.progressInfo = nil
 		m.statusBar.SetMessage(fmt.Sprintf("Enhanced analysis complete - %d files analyzed. Press Ctrl+2 for Analysis tab", msg.EnhancedAnalysis.TotalFiles))
 
-		// Update content view with enhanced analysis results but don't force switch  
+		// Update content view with enhanced analysis results but don't force switch
 		m.contentView.SetAnalysisData(m.analysisData)
 		// Stay in current view, let user decide when to switch
 
@@ -288,13 +288,13 @@ func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Total:   0,
 			Message: "Starting analysis...",
 		}
-		
+
 		// Provide context about what type of analysis is being performed
 		analysisType := "Global analysis"
 		if m.fileTree != nil && m.fileTree.HasSelectedItems() {
 			analysisType = "Selected items analysis"
 		}
-		
+
 		m.statusBar.SetMessage(fmt.Sprintf("%s: %s", analysisType, msg.Path))
 		return m, m.startAnalysis(msg.Path)
 

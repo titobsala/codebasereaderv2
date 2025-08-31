@@ -72,12 +72,15 @@ SUPPORTED LANGUAGES:
 			KeyBindings: []KeyBinding{
 				{[]string{"Tab", "Shift+Tab"}, "Switch between main tabs", "Global"},
 				{[]string{"1", "2", "3", "4"}, "Jump directly to specific tab", "Global"},
-				{[]string{"?"}, "Toggle help on/off", "Global"},
-				{[]string{"q", "Ctrl+c"}, "Quit application", "Global"},
+				{[]string{"?", "F1"}, "Toggle help on/off", "Global"},
+				{[]string{"q", "Ctrl+C"}, "Quit application", "Global"},
+				{[]string{"Esc"}, "Return to Explorer tab", "Global"},
+				{[]string{"F5", "Ctrl+R"}, "Refresh current view", "Global"},
+				{[]string{"c"}, "Clear analysis results", "Global"},
 			},
 		},
 		{
-			Title: "Navigation & File Operations", 
+			Title: "Navigation & File Operations",
 			Icon:  "🧭",
 			Content: `Navigate efficiently through your codebase:
 
@@ -85,13 +88,15 @@ FILE TREE NAVIGATION:
 • Use ↑↓ or j/k to move between files and directories
 • Press Enter to open files or expand/collapse directories  
 • Use ←→ or h/l to collapse/expand directories
-• Press Space to toggle directory expansion
+• Press Space to toggle directory expansion/selection
+• Use Backspace to navigate to parent directory
 
 FILE OPERATIONS:
 • View file contents in the content area
 • Files show syntax highlighting and line numbers
 • Navigate large files with PgUp/PgDn or scroll arrows
 • Press 'a' on directories to analyze them
+• Press 'd' to show directory details
 
 DIRECTORY ANALYSIS:
 • Select any directory and press 'a' to analyze
@@ -100,17 +105,21 @@ DIRECTORY ANALYSIS:
 • Use 'c' to clear analysis results when done`,
 			KeyBindings: []KeyBinding{
 				{[]string{"↑", "↓", "j", "k"}, "Navigate up/down in file tree", "Explorer"},
-				{[]string{"←", "→", "h", "l"}, "Collapse/expand directories", "Explorer"}, 
+				{[]string{"←", "→", "h", "l"}, "Collapse/expand directories", "Explorer"},
 				{[]string{"Enter"}, "Open file or toggle directory", "Explorer"},
-				{[]string{"Space"}, "Toggle directory expansion", "Explorer"},
+				{[]string{"Space"}, "Toggle directory expansion/selection", "Explorer"},
+				{[]string{"Backspace"}, "Navigate to parent directory", "Explorer"},
 				{[]string{"a"}, "Analyze selected directory", "Explorer"},
+				{[]string{"d"}, "Show directory details", "Explorer"},
 				{[]string{"r"}, "Refresh file tree", "Explorer"},
-				{[]string{"PgUp", "PgDn"}, "Scroll content by page", "Content View"},
+				{[]string{"Home", "End"}, "Go to top/bottom", "Explorer"},
+				{[]string{"PgUp", "PgDn"}, "Navigate by pages", "Explorer"},
+				{[]string{"g", "G"}, "Go to top/bottom", "Explorer"},
 			},
 		},
 		{
 			Title: "Analysis & Metrics",
-			Icon:  "📊", 
+			Icon:  "📊",
 			Content: `Comprehensive codebase analysis and metrics:
 
 HOW TO ANALYZE:
@@ -130,31 +139,46 @@ VIEWING RESULTS:
 • Switch to Analysis tab (Tab or press '2') to see results
 • Use 'm' to toggle between detailed metrics and overview
 • Use 's' to toggle summary view with key insights
+• Use 'e' to export analysis to JSON format
 • Scroll with ↑↓ to navigate through large result sets
 
 ANALYSIS TIPS:
 • Start from project root for complete dependency analysis
 • Large projects may take longer - watch the progress indicator
-• Use 'c' to clear analysis when switching between projects`,
+• Use 'c' to clear analysis when switching between projects
+• Analysis supports concurrent processing for better performance`,
 			KeyBindings: []KeyBinding{
 				{[]string{"a"}, "Analyze selected directory", "Explorer"},
 				{[]string{"2"}, "Switch to Analysis tab", "Global"},
 				{[]string{"m"}, "Toggle metrics/overview view", "Analysis"},
-				{[]string{"s"}, "Toggle summary view", "Analysis"}, 
+				{[]string{"s"}, "Toggle summary view", "Analysis"},
+				{[]string{"e"}, "Export analysis to JSON", "Analysis"},
 				{[]string{"c"}, "Clear current analysis", "Global"},
-				{[]string{"r"}, "Refresh/re-run analysis", "Global"},
+				{[]string{"↑", "↓", "j", "k"}, "Scroll through results", "Analysis"},
+				{[]string{"PgUp", "PgDn"}, "Navigate by pages", "Analysis"},
+				{[]string{"Home", "g"}, "Go to top", "Analysis"},
+				{[]string{"End", "G"}, "Go to bottom", "Analysis"},
 			},
 		},
 		{
-			Title: "Configuration & Tips",
+			Title: "Configuration & Commands",
 			Icon:  "⚙️",
-			Content: `Configuration and productivity tips:
+			Content: `Configuration system and available commands:
 
 CONFIGURATION TAB:
 • Switch to Configuration tab (press '3') for settings
-• Adjust worker thread count for better performance
-• Set file exclusion patterns for faster analysis
-• Configure analysis timeout for large projects
+• Type commands and press Enter to execute them
+• Available configuration commands:
+
+CONFIGURATION COMMANDS:
+• set ai_provider <anthropic|openai> - Set AI provider
+• set api_key <key> - Set API key for AI services
+• set max_workers <1-16> - Set number of worker threads
+• set timeout <1-300> - Set analysis timeout in seconds
+• show config - Display current configuration
+• reset config - Reset configuration to defaults
+• add_exclude <pattern> - Add file exclude pattern
+• remove_exclude <pattern> - Remove exclude pattern
 
 PRODUCTIVITY SHORTCUTS:
 • Use number keys 1-4 to jump between tabs quickly
@@ -167,19 +191,18 @@ ANALYSIS BEST PRACTICES:
 • Watch for circular dependencies - they indicate design issues  
 • Use different view modes (m/s) to understand different aspects
 • Clear analysis (c) when switching between projects
-
-PERFORMANCE TIPS:
-• Exclude test directories if not needed for faster analysis
-• Larger projects will take longer - be patient with progress
-• The tool handles concurrency automatically
-• Results are cached until you clear them`,
+• Use exclude patterns to skip unwanted files/directories`,
 			KeyBindings: []KeyBinding{
 				{[]string{"3"}, "Switch to Configuration tab", "Global"},
+				{[]string{"Enter"}, "Execute configuration command", "Config"},
 				{[]string{"1", "2", "3", "4"}, "Jump between tabs quickly", "Global"},
 				{[]string{"r"}, "Refresh current view", "Global"},
-				{[]string{"Ctrl+r", "F5"}, "Force refresh all views", "Global"},
+				{[]string{"Ctrl+R", "F5"}, "Force refresh all views", "Global"},
 				{[]string{"←", "→", "h", "l"}, "Navigate help sections", "Help"},
-				{[]string{"Esc"}, "Exit help and return to Explorer", "Help"},
+				{[]string{"↑", "↓", "j", "k"}, "Scroll help content", "Help"},
+				{[]string{"PgUp", "PgDn"}, "Navigate help by pages", "Help"},
+				{[]string{"Home", "g"}, "Go to top of help", "Help"},
+				{[]string{"End", "G"}, "Go to bottom of help", "Help"},
 			},
 		},
 	}
@@ -240,26 +263,23 @@ func (h *HelpViewModel) Render(width, height int) string {
 	h.width = width
 	h.height = height
 
-	var b strings.Builder
-
-	// Header with current section indicator
+	// Create the fixed header and tabs section
 	currentSection := h.sections[h.currentSection]
 	headerText := fmt.Sprintf("%s %s (%d/%d)", currentSection.Icon, currentSection.Title, h.currentSection+1, len(h.sections))
 	header := components.HeaderStyle.Render(headerText)
-	b.WriteString(header + "\n\n")
+	tabs := h.renderSectionTabs()
 
-	// Section navigation tabs
-	b.WriteString(h.renderSectionTabs() + "\n\n")
+	// Fixed parts that don't scroll
+	fixedHeader := header + "\n\n" + tabs + "\n\n"
 
-	// Section content
-	contentArea := h.renderSectionContent(currentSection)
-	b.WriteString(contentArea)
+	// Get scrollable content
+	scrollableContent := h.renderSectionContentScrollable(currentSection)
 
 	// Footer with navigation hints
 	footer := h.renderFooter()
-	b.WriteString("\n" + footer)
 
-	return b.String()
+	// Combine all parts
+	return fixedHeader + scrollableContent + "\n" + footer
 }
 
 // renderSectionTabs renders navigation tabs for help sections
@@ -287,8 +307,8 @@ func (h *HelpViewModel) renderSectionTabs() string {
 	return strings.Join(tabs, " ")
 }
 
-// renderSectionContent renders the content of the current section
-func (h *HelpViewModel) renderSectionContent(section HelpSection) string {
+// renderSectionContentScrollable renders the scrollable content of the current section
+func (h *HelpViewModel) renderSectionContentScrollable(section HelpSection) string {
 	var b strings.Builder
 
 	// Content description
@@ -319,6 +339,11 @@ func (h *HelpViewModel) renderSectionContent(section HelpSection) string {
 	}
 
 	return h.applyScrolling(b.String())
+}
+
+// renderSectionContent renders the content of the current section (legacy method, kept for compatibility)
+func (h *HelpViewModel) renderSectionContent(section HelpSection) string {
+	return h.renderSectionContentScrollable(section)
 }
 
 // renderFooter renders the help footer with navigation hints

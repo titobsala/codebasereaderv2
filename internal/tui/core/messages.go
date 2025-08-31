@@ -70,7 +70,7 @@ type ToggleSummaryMsg struct{}
 // ClearAnalysisMsg is sent to clear analysis data
 type ClearAnalysisMsg struct{}
 
-// RefreshMsg is an alias for shared.RefreshMsg  
+// RefreshMsg is an alias for shared.RefreshMsg
 type RefreshMsg = shared.RefreshMsg
 
 // StatusUpdateMsg is an alias for shared.StatusUpdateMsg

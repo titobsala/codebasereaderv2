@@ -32,7 +32,7 @@ func (a *Aggregator) AggregateProjectMetrics(results []*parser.AnalysisResult, r
 		DependencyGraph: DependencyGraph{},
 		QualityScore:    QualityScore{},
 	}
-	
+
 	// Calculate project-level metrics
 	a.calculateProjectMetrics(analysis)
 
@@ -262,10 +262,10 @@ func (a *Aggregator) analyzeDependencyGraph(analysis *EnhancedProjectAnalysis) {
 func (a *Aggregator) detectCircularDependencies(deps map[string][]string) [][]string {
 	// Simplified circular dependency detection with safety limits
 	var circular [][]string
-	
+
 	// Safety limit to prevent infinite loops
 	const maxDepth = 100
-	
+
 	visited := make(map[string]bool)
 	recursionStack := make(map[string]bool)
 
@@ -275,7 +275,7 @@ func (a *Aggregator) detectCircularDependencies(deps map[string][]string) [][]st
 		if depth > maxDepth {
 			return false
 		}
-		
+
 		if recursionStack[node] {
 			// Found a cycle, extract the cycle
 			cycleStart := -1
@@ -320,7 +320,7 @@ func (a *Aggregator) detectCircularDependencies(deps map[string][]string) [][]st
 	// Process each node with safety limits
 	processedCount := 0
 	const maxNodes = 1000
-	
+
 	for node := range deps {
 		if processedCount >= maxNodes {
 			break // Safety limit on number of nodes processed
@@ -345,7 +345,7 @@ func (a *Aggregator) calculateDependencyDepth(deps map[string][]string) int {
 		if currentDepth > maxAllowedDepth {
 			return currentDepth
 		}
-		
+
 		if visited[node] {
 			return currentDepth // Avoid infinite recursion
 		}
@@ -370,7 +370,7 @@ func (a *Aggregator) calculateDependencyDepth(deps map[string][]string) int {
 	// Process with safety limits
 	processedCount := 0
 	const maxNodes = 1000
-	
+
 	for node := range deps {
 		if processedCount >= maxNodes {
 			break

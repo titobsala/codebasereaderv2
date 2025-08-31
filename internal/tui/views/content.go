@@ -103,7 +103,7 @@ func (m *ContentViewModel) Update(msg tea.Msg) (*ContentViewModel, tea.Cmd) {
 		case "ctrl+d":
 			// Scroll down half page
 			m.scrollDown(m.height / 2)
-		
+
 		// Metrics mode switching (only when metrics are shown) - using 6-9 for terminal compatibility
 		case "6":
 			if m.showMetrics && m.analysisData != nil {
