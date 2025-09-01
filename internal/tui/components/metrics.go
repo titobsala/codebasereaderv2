@@ -123,14 +123,66 @@ func (m *MetricsDisplay) Render(analysis *metrics.EnhancedProjectAnalysis, width
 
 // renderNoData renders when no analysis data is available
 func (m *MetricsDisplay) renderNoData() string {
-	style := lipgloss.NewStyle().
+	var b strings.Builder
+
+	// Header with proper title
+	b.WriteString(HeaderStyle.Render("📊 Analysis Dashboard") + "\n\n")
+
+	// Status message
+	statusStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#626262")).
 		Italic(true).
-		Align(lipgloss.Center).
-		Width(m.width).
-		Height(m.height)
+		Align(lipgloss.Center)
 
-	return style.Render("📊 No metrics data available\n\nRun analysis on a directory to see comprehensive metrics")
+	b.WriteString(statusStyle.Render("No analysis data available") + "\n\n")
+
+	// Instructions
+	instructionsStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#7D56F4")).
+		Bold(true)
+
+	b.WriteString(instructionsStyle.Render("📁 Run analysis on a directory to see comprehensive metrics") + "\n\n")
+
+	// Navigation menu
+	b.WriteString(m.renderNavigationMenu())
+
+	return b.String()
+}
+
+// renderNavigationMenu renders the vertical navigation menu
+func (m *MetricsDisplay) renderNavigationMenu() string {
+	var b strings.Builder
+
+	menuStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#87CEEB")).
+		Bold(true)
+
+	itemStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#CCCCCC")).
+		MarginLeft(2)
+
+	keyStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#7D56F4")).
+		Bold(true)
+
+	b.WriteString(menuStyle.Render("📋 Navigation Options") + "\n")
+	b.WriteString(itemStyle.Render(keyStyle.Render("6")+" → Overview (Project summary & key metrics)") + "\n")
+	b.WriteString(itemStyle.Render(keyStyle.Render("7")+" → Detailed (File-level analysis & statistics)") + "\n")
+	b.WriteString(itemStyle.Render(keyStyle.Render("8")+" → Quality (Code quality scores & insights)") + "\n")
+	b.WriteString(itemStyle.Render(keyStyle.Render("9")+" → Dependencies (Dependency graph & analysis)") + "\n\n")
+
+	b.WriteString(menuStyle.Render("🎯 Quick Actions") + "\n")
+	b.WriteString(itemStyle.Render(keyStyle.Render("m")+" → Toggle metrics view") + "\n")
+	b.WriteString(itemStyle.Render(keyStyle.Render("r")+" → Reset to overview") + "\n")
+	b.WriteString(itemStyle.Render(keyStyle.Render("1-5")+" → Switch between main tabs") + "\n\n")
+
+	helpStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#626262")).
+		Italic(true)
+
+	b.WriteString(helpStyle.Render("💡 Tip: Navigate to Explorer tab and press 'a' to analyze a directory"))
+
+	return b.String()
 }
 
 // renderOverview renders the overview mode
@@ -157,6 +209,10 @@ func (m *MetricsDisplay) renderOverview(analysis *metrics.EnhancedProjectAnalysi
 
 	// Key insights
 	b.WriteString(m.renderKeyInsights(analysis))
+	b.WriteString("\n")
+
+	// Always show navigation menu for easy access
+	b.WriteString(m.renderNavigationMenu())
 
 	return m.applyScrolling(b.String())
 }
@@ -178,6 +234,10 @@ func (m *MetricsDisplay) renderDetailed(analysis *metrics.EnhancedProjectAnalysi
 
 	// Language details
 	b.WriteString(m.renderLanguageDetails(analysis.Languages))
+	b.WriteString("\n")
+
+	// Navigation menu
+	b.WriteString(m.renderNavigationMenu())
 
 	return m.applyScrolling(b.String())
 }
@@ -199,6 +259,10 @@ func (m *MetricsDisplay) renderQuality(analysis *metrics.EnhancedProjectAnalysis
 
 	// Maintainability insights
 	b.WriteString(m.renderMaintainabilityInsights(analysis))
+	b.WriteString("\n")
+
+	// Navigation menu
+	b.WriteString(m.renderNavigationMenu())
 
 	return m.applyScrolling(b.String())
 }
@@ -235,7 +299,11 @@ func (m *MetricsDisplay) renderDependencies(analysis *metrics.EnhancedProjectAna
 	// Circular dependencies
 	if len(analysis.DependencyGraph.CircularDependencies) > 0 {
 		b.WriteString(m.renderCircularDependencies(analysis.DependencyGraph))
+		b.WriteString("\n")
 	}
+
+	// Navigation menu
+	b.WriteString(m.renderNavigationMenu())
 
 	return m.applyScrolling(b.String())
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/tito-sala/codebasereaderv2/internal/engine"
 	"github.com/tito-sala/codebasereaderv2/internal/tui"
 	"github.com/tito-sala/codebasereaderv2/internal/tui/components"
@@ -34,7 +35,7 @@ type ContentViewModel struct {
 // NewContentViewModel creates a new content view model
 func NewContentViewModel() *ContentViewModel {
 	return &ContentViewModel{
-		content:        "Select a file to view its content",
+		content:        "",
 		scrollY:        0,
 		maxScroll:      0,
 		showMetrics:    false,
@@ -62,6 +63,11 @@ func (m *ContentViewModel) GetAnalysisData() *shared.AnalysisData {
 // SetAnalysisData sets the analysis data (for testing)
 func (m *ContentViewModel) SetAnalysisData(data *shared.AnalysisData) {
 	m.analysisData = data
+	// When analysis data is set, enable metrics view by default
+	if data != nil {
+		m.showMetrics = true
+		m.UpdateContentFromAnalysis()
+	}
 }
 
 // ShowMetrics returns whether metrics are shown (for testing)
@@ -187,7 +193,13 @@ func (m *ContentViewModel) View(width, height int) string {
 	// Content area
 	contentHeight := height - 4 // Reserve space for header and controls
 
-	if m.content == "" {
+	// Handle different content scenarios
+	if m.analysisData == nil && m.filePath == "" && !m.showMetrics && !m.showSummary {
+		// No file selected and no analysis data - show the analysis dashboard
+		dashboardContent := m.renderAnalysisDashboard(width, contentHeight)
+		b.WriteString(dashboardContent)
+		return b.String()
+	} else if m.content == "" {
 		b.WriteString(components.HelpStyle.Render("No content to display"))
 		return b.String()
 	}
@@ -286,6 +298,8 @@ func (m *ContentViewModel) SetSummary(summary string) {
 // updateContentFromAnalysis updates the content based on current view mode
 func (m *ContentViewModel) UpdateContentFromAnalysis() {
 	if m.analysisData == nil {
+		// Clear content so the dashboard will be shown
+		m.content = ""
 		return
 	}
 
@@ -489,6 +503,131 @@ func (m *ContentViewModel) formatAnalysisMetrics() string {
 			b.WriteString("\n")
 		}
 	}
+
+	return b.String()
+}
+
+// renderAnalysisDashboard renders the main analysis dashboard when no file is selected
+func (m *ContentViewModel) renderAnalysisDashboard(width, height int) string {
+	var b strings.Builder
+
+	// Title
+	titleStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#7D56F4")).
+		Bold(true).
+		Underline(true)
+
+	b.WriteString(titleStyle.Render("📊 Analysis Dashboard") + "\n\n")
+
+	// Status section
+	statusStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#87CEEB")).
+		Bold(true)
+
+	descStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#CCCCCC")).
+		MarginLeft(2)
+
+	if m.analysisData == nil {
+		b.WriteString(statusStyle.Render("📋 Status: No Analysis Data") + "\n")
+		b.WriteString(descStyle.Render("No codebase has been analyzed yet.") + "\n\n")
+
+		b.WriteString(statusStyle.Render("🚀 Getting Started") + "\n")
+		b.WriteString(descStyle.Render("1. Navigate to the Explorer tab (Tab 1 or press 1)") + "\n")
+		b.WriteString(descStyle.Render("2. Select a directory") + "\n")
+		b.WriteString(descStyle.Render("3. Press 'a' to analyze the directory") + "\n")
+		b.WriteString(descStyle.Render("4. Return to this tab to view the results") + "\n\n")
+	} else {
+		b.WriteString(statusStyle.Render("✅ Status: Analysis Complete") + "\n")
+		b.WriteString(descStyle.Render("Analysis data is available. Use the controls below to explore.") + "\n\n")
+	}
+
+	// Navigation menu
+	b.WriteString(m.renderNavigationMenu())
+
+	// Additional help
+	helpStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#626262")).
+		Italic(true).
+		MarginTop(2)
+
+	b.WriteString(helpStyle.Render("💡 Tips:") + "\n")
+	b.WriteString(helpStyle.Render("• Use Tab or Shift+Tab to cycle between tabs") + "\n")
+	b.WriteString(helpStyle.Render("• Press ? for comprehensive help") + "\n")
+	b.WriteString(helpStyle.Render("• Press Esc to return to Explorer") + "\n")
+
+	return b.String()
+}
+
+// renderNavigationMenu renders the vertical navigation menu for the analysis tab
+func (m *ContentViewModel) renderNavigationMenu() string {
+	var b strings.Builder
+
+	menuStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#87CEEB")).
+		Bold(true)
+
+	itemStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#CCCCCC")).
+		MarginLeft(2)
+
+	keyStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#7D56F4")).
+		Bold(true)
+
+	availableStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#66BB6A"))
+
+	unavailableStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#626262")).
+		Strikethrough(true)
+
+	b.WriteString(menuStyle.Render("📋 Analysis Views") + "\n")
+
+	if m.analysisData != nil {
+		// Analysis data available - show all options as available
+		b.WriteString(itemStyle.Render(keyStyle.Render("6")+" → "+availableStyle.Render("Overview")+" (Project summary & key metrics)") + "\n")
+		b.WriteString(itemStyle.Render(keyStyle.Render("7")+" → "+availableStyle.Render("Detailed")+" (File-level analysis & statistics)") + "\n")
+		b.WriteString(itemStyle.Render(keyStyle.Render("8")+" → "+availableStyle.Render("Quality")+" (Code quality scores & insights)") + "\n")
+		b.WriteString(itemStyle.Render(keyStyle.Render("9")+" → "+availableStyle.Render("Dependencies")+" (Dependency graph & analysis)") + "\n\n")
+
+		b.WriteString(menuStyle.Render("🎯 Quick Actions") + "\n")
+		b.WriteString(itemStyle.Render(keyStyle.Render("m")+" → "+availableStyle.Render("Toggle metrics view")) + "\n")
+		b.WriteString(itemStyle.Render(keyStyle.Render("r")+" → "+availableStyle.Render("Reset to overview")) + "\n")
+
+		// Show current mode if metrics are enabled
+		if m.showMetrics {
+			currentModeText := ""
+			switch m.currentMode {
+			case components.OverviewMode:
+				currentModeText = "Overview"
+			case components.DetailedMode:
+				currentModeText = "Detailed"
+			case components.QualityMode:
+				currentModeText = "Quality"
+			case components.DependencyMode:
+				currentModeText = "Dependencies"
+			}
+
+			currentStyle := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#FFEB3B")).
+				Bold(true)
+
+			b.WriteString(itemStyle.Render("🎯 "+currentStyle.Render("Current: "+currentModeText+" Mode")) + "\n")
+		}
+	} else {
+		// No analysis data - show options as unavailable
+		b.WriteString(itemStyle.Render(keyStyle.Render("6")+" → "+unavailableStyle.Render("Overview")+" (requires analysis)") + "\n")
+		b.WriteString(itemStyle.Render(keyStyle.Render("7")+" → "+unavailableStyle.Render("Detailed")+" (requires analysis)") + "\n")
+		b.WriteString(itemStyle.Render(keyStyle.Render("8")+" → "+unavailableStyle.Render("Quality")+" (requires analysis)") + "\n")
+		b.WriteString(itemStyle.Render(keyStyle.Render("9")+" → "+unavailableStyle.Render("Dependencies")+" (requires analysis)") + "\n\n")
+
+		b.WriteString(menuStyle.Render("🎯 Available Actions") + "\n")
+		b.WriteString(itemStyle.Render(keyStyle.Render("1")+" → "+availableStyle.Render("Go to Explorer tab")) + "\n")
+		b.WriteString(itemStyle.Render(keyStyle.Render("a")+" → "+availableStyle.Render("Analyze directory")+" (from Explorer)") + "\n")
+	}
+
+	b.WriteString(itemStyle.Render(keyStyle.Render("1-5")+" → Switch between main tabs") + "\n\n")
 
 	return b.String()
 }

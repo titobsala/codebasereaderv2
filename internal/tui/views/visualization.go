@@ -43,11 +43,11 @@ type VisualizationModeInfo struct {
 
 // FilterOptions contains filtering options for visualizations
 type FilterOptions struct {
-	Language       string
-	MinComplexity  int
-	MaxComplexity  int
-	ShowTestFiles  bool
-	FilePattern    string
+	Language      string
+	MinComplexity int
+	MaxComplexity int
+	ShowTestFiles bool
+	FilePattern   string
 }
 
 // AnalysisData wraps the analysis data for the visualization
@@ -263,7 +263,7 @@ func (v *VisualizationViewModel) renderNoData() string {
 		Italic(true).
 		Align(lipgloss.Center).
 		Width(v.width).
-		Height(v.height-10)
+		Height(v.height - 10)
 
 	return style.Render("📊 No analysis data available\n\nRun analysis on a directory to see visualizations")
 }
@@ -271,7 +271,7 @@ func (v *VisualizationViewModel) renderNoData() string {
 // renderDependencyTree renders dependency tree visualization
 func (v *VisualizationViewModel) renderDependencyTree() string {
 	var b strings.Builder
-	
+
 	analysis := v.analysisData.EnhancedProjectAnalysis
 	deps := analysis.DependencyGraph
 
@@ -330,21 +330,21 @@ func (v *VisualizationViewModel) renderDependencyTree() string {
 // renderComplexityHeatmap renders complexity heatmap visualization
 func (v *VisualizationViewModel) renderComplexityHeatmap() string {
 	var b strings.Builder
-	
+
 	analysis := v.analysisData.EnhancedProjectAnalysis
 
 	b.WriteString("🔥 Complexity Heatmap\n\n")
 
 	// Create a visual complexity distribution
 	b.WriteString("📊 Complexity Distribution by Directory:\n")
-	
+
 	// Sort directories by complexity for better visualization
 	type dirComplexity struct {
 		path       string
 		complexity int
 		files      int
 	}
-	
+
 	var dirs []dirComplexity
 	for path, stats := range analysis.DirectoryStats {
 		dirs = append(dirs, dirComplexity{
@@ -384,7 +384,7 @@ func (v *VisualizationViewModel) renderComplexityHeatmap() string {
 		// Create color-coded bar based on complexity level
 		var barChar string
 		var barColor lipgloss.Color
-		
+
 		complexityRatio := float64(dir.complexity) / float64(maxComplexity)
 		if complexityRatio > 0.8 {
 			barChar = "█"
@@ -402,8 +402,8 @@ func (v *VisualizationViewModel) renderComplexityHeatmap() string {
 
 		bar := strings.Repeat(barChar, barLength)
 		coloredBar := lipgloss.NewStyle().Foreground(barColor).Render(bar)
-		
-		b.WriteString(fmt.Sprintf("%-30s %s %d (%d files)\n", 
+
+		b.WriteString(fmt.Sprintf("%-30s %s %d (%d files)\n",
 			dir.path, coloredBar, dir.complexity, dir.files))
 	}
 
@@ -419,7 +419,7 @@ func (v *VisualizationViewModel) renderComplexityHeatmap() string {
 // renderLanguageComposition renders language composition charts
 func (v *VisualizationViewModel) renderLanguageComposition() string {
 	var b strings.Builder
-	
+
 	analysis := v.analysisData.EnhancedProjectAnalysis
 
 	b.WriteString("🎨 Language Composition\n\n")
@@ -431,7 +431,7 @@ func (v *VisualizationViewModel) renderLanguageComposition() string {
 	}
 
 	b.WriteString("📊 Lines of Code by Language:\n")
-	
+
 	// Sort languages by line count
 	type langStat struct {
 		name  string
@@ -455,14 +455,14 @@ func (v *VisualizationViewModel) renderLanguageComposition() string {
 	for _, langStat := range sortedLangs {
 		lang := langStat.name
 		stats := langStat.stats
-		
+
 		percentage := float64(stats.LineCount) / float64(totalLines) * 100
 		barLength := int(percentage * 50 / 100) // Max 50 chars
-		
+
 		// Language-specific colors/icons
 		var langIcon string
 		var barColor lipgloss.Color
-		
+
 		switch strings.ToLower(lang) {
 		case "go":
 			langIcon = "🐹"
@@ -488,10 +488,10 @@ func (v *VisualizationViewModel) renderLanguageComposition() string {
 		if barLength == 0 {
 			bar = "▏" // Show something even for very small percentages
 		}
-		
+
 		coloredBar := lipgloss.NewStyle().Foreground(barColor).Render(bar)
-		
-		b.WriteString(fmt.Sprintf("%s %-12s %s %.1f%% (%d lines, %d files)\n", 
+
+		b.WriteString(fmt.Sprintf("%s %-12s %s %.1f%% (%d lines, %d files)\n",
 			langIcon, lang, coloredBar, percentage, stats.LineCount, stats.FileCount))
 	}
 
@@ -499,11 +499,11 @@ func (v *VisualizationViewModel) renderLanguageComposition() string {
 	for _, langStat := range sortedLangs {
 		lang := langStat.name
 		stats := langStat.stats
-		
+
 		b.WriteString(fmt.Sprintf("• %s:\n", lang))
 		b.WriteString(fmt.Sprintf("  - Functions: %d (avg complexity: %.1f)\n", stats.FunctionCount, stats.AverageComplexity))
 		b.WriteString(fmt.Sprintf("  - Classes: %d\n", stats.ClassCount))
-		b.WriteString(fmt.Sprintf("  - Code/Comment/Blank: %d/%d/%d lines\n", 
+		b.WriteString(fmt.Sprintf("  - Code/Comment/Blank: %d/%d/%d lines\n",
 			stats.CodeLines, stats.CommentLines, stats.BlankLines))
 		if stats.TestFiles > 0 {
 			b.WriteString(fmt.Sprintf("  - Test files: %d (coverage: %.1f%%)\n", stats.TestFiles, stats.TestCoverage))
@@ -517,7 +517,7 @@ func (v *VisualizationViewModel) renderLanguageComposition() string {
 // renderQualityGauges renders quality metrics as gauges
 func (v *VisualizationViewModel) renderQualityGauges() string {
 	var b strings.Builder
-	
+
 	analysis := v.analysisData.EnhancedProjectAnalysis
 	quality := analysis.QualityScore
 
@@ -528,7 +528,7 @@ func (v *VisualizationViewModel) renderQualityGauges() string {
 	overallGauge := v.createGauge(quality.Overall, 60)
 	gradeColor := v.getGradeColor(quality.Grade)
 	gradeStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(gradeColor)).Bold(true)
-	
+
 	b.WriteString(fmt.Sprintf("%s\n", overallGauge))
 	b.WriteString(fmt.Sprintf("Score: %.1f%% (Grade: %s)\n\n", quality.Overall, gradeStyle.Render(quality.Grade)))
 
@@ -590,7 +590,7 @@ func (v *VisualizationViewModel) renderQualityGauges() string {
 // renderTechnicalDebt renders technical debt visualization
 func (v *VisualizationViewModel) renderTechnicalDebt() string {
 	var b strings.Builder
-	
+
 	analysis := v.analysisData.EnhancedProjectAnalysis
 	projectMetrics := analysis.ProjectMetrics
 
@@ -599,11 +599,11 @@ func (v *VisualizationViewModel) renderTechnicalDebt() string {
 	// Overall debt score
 	b.WriteString("💰 Technical Debt Overview:\n")
 	debtScore := projectMetrics.TechnicalDebt
-	
+
 	// Create debt level visualization
 	debtGauge := v.createDebtGauge(debtScore)
 	b.WriteString(fmt.Sprintf("%s\n", debtGauge))
-	
+
 	debtLevel, debtColor := v.getDebtLevel(debtScore)
 	debtStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(debtColor)).Bold(true)
 	b.WriteString(fmt.Sprintf("Debt Score: %.1f (%s)\n\n", debtScore, debtStyle.Render(debtLevel)))
@@ -622,22 +622,22 @@ func (v *VisualizationViewModel) renderTechnicalDebt() string {
 	avgComplexity := projectMetrics.AverageComplexity
 	maxComplexity := projectMetrics.MaxComplexity
 	maintainabilityIndex := projectMetrics.MaintainabilityIndex
-	
+
 	if avgComplexity > 10 {
 		b.WriteString("🔥 High Average Complexity: Functions are too complex\n")
 		b.WriteString("   → Consider breaking down large functions\n")
 	}
-	
+
 	if maxComplexity > 25 {
 		b.WriteString("⚡ Extremely Complex Functions: Some functions are very complex\n")
 		b.WriteString("   → Identify and refactor the most complex functions\n")
 	}
-	
+
 	if maintainabilityIndex < 60 {
 		b.WriteString("🔧 Low Maintainability: Code is hard to maintain\n")
 		b.WriteString("   → Focus on improving code structure and readability\n")
 	}
-	
+
 	if projectMetrics.CodeDuplication > 15 {
 		b.WriteString("📋 High Code Duplication: Significant code repetition\n")
 		b.WriteString("   → Extract common functionality into reusable components\n")
@@ -667,7 +667,7 @@ func (v *VisualizationViewModel) renderTechnicalDebt() string {
 // renderFunctionUsage renders function usage patterns
 func (v *VisualizationViewModel) renderFunctionUsage() string {
 	var b strings.Builder
-	
+
 	analysis := v.analysisData.EnhancedProjectAnalysis
 
 	b.WriteString("📊 Function Usage Analysis\n\n")
@@ -695,18 +695,18 @@ func (v *VisualizationViewModel) renderFunctionUsage() string {
 		if stats.FunctionCount == 0 {
 			continue
 		}
-		
+
 		langIcon := v.getLangIcon(lang)
-		
+
 		// Create complexity distribution visualization
 		complexityRatio := stats.AverageComplexity / 20.0 // Normalize to reasonable scale
 		if complexityRatio > 1.0 {
 			complexityRatio = 1.0
 		}
-		
+
 		complexityBar := v.createComplexityBar(complexityRatio, 25)
-		
-		b.WriteString(fmt.Sprintf("%s %-12s %s Functions: %d, Avg Complexity: %.1f\n", 
+
+		b.WriteString(fmt.Sprintf("%s %-12s %s Functions: %d, Avg Complexity: %.1f\n",
 			langIcon, lang, complexityBar, stats.FunctionCount, stats.AverageComplexity))
 	}
 	b.WriteString("\n")
@@ -717,11 +717,11 @@ func (v *VisualizationViewModel) renderFunctionUsage() string {
 		if stats.FunctionCount == 0 {
 			continue
 		}
-		
+
 		avgLinesPerFunction := float64(stats.CodeLines) / float64(stats.FunctionCount)
 		sizeCategory := "Small"
 		sizeIcon := "🟢"
-		
+
 		if avgLinesPerFunction > 50 {
 			sizeCategory = "Large"
 			sizeIcon = "🔴"
@@ -729,29 +729,29 @@ func (v *VisualizationViewModel) renderFunctionUsage() string {
 			sizeCategory = "Medium"
 			sizeIcon = "🟡"
 		}
-		
-		b.WriteString(fmt.Sprintf("%s %s: %.1f lines/function (%s)\n", 
+
+		b.WriteString(fmt.Sprintf("%s %s: %.1f lines/function (%s)\n",
 			sizeIcon, lang, avgLinesPerFunction, sizeCategory))
 	}
 	b.WriteString("\n")
 
 	// Quality recommendations based on function patterns
 	b.WriteString("💡 Function Quality Recommendations:\n")
-	
+
 	highComplexityLangs := 0
 	for _, stats := range analysis.Languages {
 		if stats.AverageComplexity > 10 {
 			highComplexityLangs++
 		}
 	}
-	
+
 	if highComplexityLangs > 0 {
 		b.WriteString("⚠️  High Complexity Detected:\n")
 		b.WriteString("• Break down complex functions into smaller, focused functions\n")
 		b.WriteString("• Consider extracting common logic into utility functions\n")
 		b.WriteString("• Use early returns to reduce nesting levels\n")
 	}
-	
+
 	if totalFunctions > 500 {
 		b.WriteString("📊 Large Codebase:\n")
 		b.WriteString("• Consider organizing functions into modules/packages\n")
@@ -782,10 +782,10 @@ func (v *VisualizationViewModel) renderFunctionUsage() string {
 func (v *VisualizationViewModel) createGauge(value float64, width int) string {
 	filled := int(value * float64(width) / 100)
 	empty := width - filled
-	
+
 	var fillChar, emptyChar string
 	var fillColor lipgloss.Color
-	
+
 	if value >= 80 {
 		fillChar = "█"
 		fillColor = lipgloss.Color("#00FF00") // Green
@@ -799,12 +799,12 @@ func (v *VisualizationViewModel) createGauge(value float64, width int) string {
 		fillChar = "░"
 		fillColor = lipgloss.Color("#FF0000") // Red
 	}
-	
+
 	emptyChar = "░"
-	
+
 	filledPart := lipgloss.NewStyle().Foreground(fillColor).Render(strings.Repeat(fillChar, filled))
 	emptyPart := lipgloss.NewStyle().Foreground(lipgloss.Color("#333333")).Render(strings.Repeat(emptyChar, empty))
-	
+
 	return fmt.Sprintf("[%s%s] %.1f%%", filledPart, emptyPart, value)
 }
 
@@ -815,7 +815,7 @@ func (v *VisualizationViewModel) createDebtGauge(debt float64) string {
 	if normalizedDebt > 100 {
 		normalizedDebt = 100
 	}
-	
+
 	return v.createGauge(normalizedDebt, 50)
 }
 
@@ -825,7 +825,7 @@ func (v *VisualizationViewModel) createMiniGauge(value float64, width int) strin
 	if filled > width {
 		filled = width
 	}
-	
+
 	bar := strings.Repeat("█", filled) + strings.Repeat("░", width-filled)
 	return fmt.Sprintf("[%s]", bar)
 }
@@ -836,7 +836,7 @@ func (v *VisualizationViewModel) createComplexityBar(ratio float64, width int) s
 	if filled > width {
 		filled = width
 	}
-	
+
 	var fillColor lipgloss.Color
 	if ratio > 0.8 {
 		fillColor = lipgloss.Color("#FF0000") // Red for high complexity
@@ -847,10 +847,10 @@ func (v *VisualizationViewModel) createComplexityBar(ratio float64, width int) s
 	} else {
 		fillColor = lipgloss.Color("#00FF00") // Green for low
 	}
-	
+
 	filledPart := lipgloss.NewStyle().Foreground(fillColor).Render(strings.Repeat("█", filled))
 	emptyPart := strings.Repeat("░", width-filled)
-	
+
 	return fmt.Sprintf("[%s%s]", filledPart, emptyPart)
 }
 
