@@ -126,26 +126,12 @@ func (m *FileTreeModel) Update(msg tea.Msg) (*FileTreeModel, tea.Cmd) {
 		case "r":
 			return m, m.loadDirectory(m.rootPath)
 		case "a":
-			// Multi-mode analysis: respects selection state for focused vs global analysis
+			// Simple analysis: selected items vs global analysis
 			if m.hasSelectedItems() {
 				// Selected items mode: analyze only the selected directories
 				return m, m.analyzeSelectedItems()
-			} else if len(m.items) > 0 && m.cursor < len(m.items) {
-				// Single item mode: analyze the highlighted item
-				item := m.items[m.cursor]
-				if item.IsDirectory {
-					// Analyze the highlighted directory
-					return m, func() tea.Msg {
-						return shared.DirectorySelectedMsg{Path: item.Path}
-					}
-				} else {
-					// For files, analyze the directory containing the file
-					return m, func() tea.Msg {
-						return shared.DirectorySelectedMsg{Path: filepath.Dir(item.Path)}
-					}
-				}
 			} else {
-				// Global mode: analyze entire current directory
+				// Global mode: analyze entire current directory and all subdirectories
 				return m, func() tea.Msg {
 					return shared.DirectorySelectedMsg{Path: m.currentPath}
 				}
@@ -255,9 +241,9 @@ func (m *FileTreeModel) View(width, height int) string {
 				selectedCount++
 			}
 		}
-		controls = fmt.Sprintf("Controls: Enter=nav, →=expand, ←=parent, Space=select (%d), a=analyze", selectedCount)
+		controls = fmt.Sprintf("Controls: Enter=nav, →=expand, ←=parent, Space=select (%d), a=analyze selected", selectedCount)
 	} else {
-		controls = "Controls: Enter=navigate, →=expand, ←=parent/collapse, Space=select, a=analyze"
+		controls = "Controls: Enter=navigate, →=expand, ←=parent/collapse, Space=select, a=analyze directory (global)"
 	}
 	b.WriteString("\n" + components.HelpStyle.Render(controls))
 
