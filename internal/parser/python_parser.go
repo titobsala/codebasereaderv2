@@ -361,20 +361,37 @@ func (p *PythonParser) isPublicClass(name string) bool {
 	return !strings.HasPrefix(name, "_")
 }
 
-// hasDocstring checks if a function or class has a docstring
+// hasDocstring checks if a function or class has a docstring.
+// It checks the definition line itself, and subsequent lines.
 func (p *PythonParser) hasDocstring(lines []string, lineNum int) bool {
-	if lineNum >= len(lines) {
+	// lineNum is 1-based, so the definition line is at index lineNum - 1
+	defLineIdx := lineNum - 1
+
+	if defLineIdx >= len(lines) {
 		return false
 	}
 
-	// Look for docstring in the next few lines
-	for i := lineNum; i < len(lines) && i < lineNum+3; i++ {
-		line := strings.TrimSpace(lines[i])
-		if strings.HasPrefix(line, `"""`) || strings.HasPrefix(line, `'''`) {
+	// First, check if the docstring is on the same line as the definition
+	defLine := lines[defLineIdx]
+	if strings.Contains(defLine, `"""`) || strings.Contains(defLine, `'''`) {
+		// More robust check to ensure it's not just a string literal in code
+		trimmedDefLine := strings.TrimSpace(defLine)
+		if strings.HasSuffix(trimmedDefLine, `"""`) || strings.HasSuffix(trimmedDefLine, `'''`) {
 			return true
 		}
-		if line != "" && !strings.HasPrefix(line, "#") {
-			break // Found non-comment, non-empty line
+	}
+
+	// If not on the same line, look for docstring in the next lines
+	for i := lineNum; i < len(lines); i++ {
+		line := strings.TrimSpace(lines[i])
+
+		// If we find a non-empty, non-comment line that is not a docstring, stop.
+		if line != "" && !strings.HasPrefix(line, "#") && !strings.HasPrefix(line, `"""`) && !strings.HasPrefix(line, `'''`) {
+			return false
+		}
+
+		if strings.HasPrefix(line, `"""`) || strings.HasPrefix(line, `'''`) {
+			return true
 		}
 	}
 

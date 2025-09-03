@@ -546,3 +546,99 @@ func TestPythonParser_Parse_ExceptionHandling(t *testing.T) {
 		t.Errorf("Expected complexity >= 6 for function with multiple exception handlers, got %d", fn.Complexity)
 	}
 }
+
+func TestPythonParser_Parse_Docstrings(t *testing.T) {
+	parser := NewPythonParser()
+
+	testCases := []struct {
+		name          string
+		content       string
+		hasDocstring  bool
+		isClass       bool
+		funcOrClsName string
+	}{
+		{
+			name:          "Function with same-line docstring",
+			content:       `def my_func(): """This is a docstring."""`,
+			hasDocstring:  true,
+			isClass:       false,
+			funcOrClsName: "my_func",
+		},
+		{
+			name: "Function with next-line docstring",
+			content: `def my_func():
+	"""This is a docstring."""`,
+			hasDocstring:  true,
+			isClass:       false,
+			funcOrClsName: "my_func",
+		},
+		{
+			name: "Function with docstring after comments and blank lines",
+			content: `def my_func():
+	# A comment
+
+	"""This is a docstring."""`,
+			hasDocstring:  true,
+			isClass:       false,
+			funcOrClsName: "my_func",
+		},
+		{
+			name:          "Function with no docstring",
+			content:       `def my_func():
+	pass`,
+			hasDocstring:  false,
+			isClass:       false,
+			funcOrClsName: "my_func",
+		},
+		{
+			name:          "Class with same-line docstring",
+			content:       `class MyClass: """This is a docstring."""`,
+			hasDocstring:  true,
+			isClass:       true,
+			funcOrClsName: "MyClass",
+		},
+		{
+			name: "Class with docstring after comments and blank lines",
+			content: `class MyClass:
+	# A comment
+
+	"""This is a docstring."""`,
+			hasDocstring:  true,
+			isClass:       true,
+			funcOrClsName: "MyClass",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := parser.Parse("test.py", []byte(tc.content))
+			if err != nil {
+				t.Fatalf("Parse failed: %v", err)
+			}
+
+			if tc.isClass {
+				if len(result.Classes) != 1 {
+					t.Fatalf("Expected 1 class, got %d", len(result.Classes))
+				}
+				cls := result.Classes[0]
+				if cls.Name != tc.funcOrClsName {
+					t.Errorf("Expected class name '%s', got '%s'", tc.funcOrClsName, cls.Name)
+				}
+				if cls.HasDocstring != tc.hasDocstring {
+					t.Errorf("Expected HasDocstring to be %v, but got %v", tc.hasDocstring, cls.HasDocstring)
+				}
+			} else {
+				if len(result.Functions) != 1 {
+					t.Fatalf("Expected 1 function, got %d", len(result.Functions))
+				}
+				fn := result.Functions[0]
+				if fn.Name != tc.funcOrClsName {
+					t.Errorf("Expected function name '%s', got '%s'", tc.funcOrClsName, fn.Name)
+				}
+				if fn.HasDocstring != tc.hasDocstring {
+					t.Errorf("Expected HasDocstring to be %v, but got %v", tc.hasDocstring, fn.HasDocstring)
+				}
+			}
+		})
+	}
+}
